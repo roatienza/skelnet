@@ -16,6 +16,10 @@ import scipy.misc
 from utils import read_points, plot_3d_point_cloud, plot_2d_point_cloud
 from utils import list_files
 
+#53941
+#12270
+#dataset/point/full/coords_rat-09-full.pts
+#dataset/point/skel/coords_pocket-2-skel.pts
 
 PC_PATH = "dataset/point/full"
 SK_PATH = "dataset/point/skel"
@@ -27,17 +31,43 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     files = list_files(PC_PATH)
-    mfull = [0, 0]
-    sfull = [0, 0]
+    pts = np.array([])
+    sks = np.array([])
+    maxplen = 0
+    maxslen = 0
+    pmin = 255
+    pmax = 0
+    smin = 255
+    smax = 0
+
     for f in files:
         sk_file = f.replace("full", "skel")
         pc_file = os.path.join(PC_PATH, f)
-        print(pc_file)
-        pts = np.array(read_points(pc_file))
+        pt = np.array(read_points(pc_file))
         sk_file = os.path.join(SK_PATH, sk_file)
-        sks = np.array(read_points(sk_file))
-        plot_2d_point_cloud(pts, sks)
+        sk = np.array(read_points(sk_file))
+        # pts = np.append(pts, pt, axis=0)
+        # sks = np.append(sks, sk, axis=0)
+        if pt.shape[0] > maxplen:
+            p = pc_file
+        if sk.shape[0] > maxslen:
+            s = sk_file
+        maxplen = max(maxplen, pt.shape[0])
+        maxslen = max(maxslen, sk.shape[0])
+        pmax = max(pmax, np.amax(pt))
+        pmin = min(pmin, np.amin(pt))
+        smax = max(smax, np.amax(sk))
+        smin = min(smin, np.amin(sk))
+        
+        # plot_2d_point_cloud(pts, sks)
+        print(pc_file)
 
+    print(maxplen)
+    print(maxslen)
+    print(p)
+    print(s)
+    print(pmax, pmin)
+    print(smax, smin)
 
     exit(0)
 

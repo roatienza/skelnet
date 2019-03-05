@@ -4,6 +4,14 @@ import matplotlib.pylab  as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
 import math
+import skimage
+from skimage.io import imread
+
+
+def read_gray(f):
+    # im = skimage.img_as_float(imread(f))
+    im = imread(f)
+    return im
 
 
 def list_files(dir_):

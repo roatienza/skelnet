@@ -18,7 +18,7 @@ from skimage.io import imsave
 from utils import list_files, read_gray
 
 
-PX_PATH = "dataset/pixel/test"
+PX_PATH = "dataset/pixel/train"
 PR_PATH = "dataset/pixel/prediction"
 
 def predict_pix(model):
@@ -40,7 +40,10 @@ def predict_pix(model):
         pix = input_pix[i]
         pix = np.expand_dims(pix, axis=0)
         out_pix = model.predict(pix)
-        out_pix = np.squeeze(out_pix)
+        out_pix = np.squeeze(out_pix) * 255.0
+        out_pix = out_pix.astype(np.uint8)
+        # out_pix[out_pix<0.5] = 0.0
+        # out_pix[out_pix>0.0] = 1.0
         path = os.path.join(PR_PATH, files[i])
         print("Saving ... ", path)
         imsave(path, out_pix)
@@ -51,6 +54,11 @@ if __name__ == '__main__':
     help_ = "Load weights"
     parser.add_argument("--weights",
                         default=None,
+                        help=help_)
+    help_ = "Train"
+    parser.add_argument("--train",
+                        default=False,
+                        action='store_true',
                         help=help_)
     args = parser.parse_args()
 
@@ -82,8 +90,8 @@ if __name__ == '__main__':
     if args.weights is not None:
         print("Loading weights ...", args.weights)
         model.load_weights(args.weights)
+    if not args.train:
         predict_pix(model)
-
     else:
         optimizer = Adam(lr=1e-3)
         model.compile(loss='binary_crossentropy',
@@ -92,6 +100,6 @@ if __name__ == '__main__':
         # train the model with input images and labels
         model.fit(input_pix,
                   output_pix,
-                  epochs=20,
+                  epochs=50,
                   batch_size=8)
         model.save_weights("weights_pix.h5")

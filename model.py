@@ -8,7 +8,7 @@ from __future__ import print_function
 
 from keras.layers import Activation, Dense, Input
 from keras.layers import Conv2D, Flatten
-from keras.layers import Conv2DTranspose
+from keras.layers import Conv2DTranspose, Dropout
 from keras.layers import BatchNormalization
 from keras.models import Model
 from keras.models import load_model
@@ -35,6 +35,7 @@ def encoder_layer(inputs,
     x = BatchNormalization()(x)
     x = Activation(activation)(x)
     x = conv(x)
+    x = Dropout(0.4)(x)
     return x
 
 
@@ -55,6 +56,7 @@ def decoder_layer(inputs,
     x = Activation(activation)(x)
     x = conv(x)
     x = concatenate([x, paired_inputs])
+    x = Dropout(0.4)(x)
     return x
 
 

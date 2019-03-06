@@ -15,6 +15,8 @@ import datetime
 import scipy.misc
 import json
 
+import matplotlib.pyplot as plt
+
 from utils import read_points, plot_3d_point_cloud, plot_2d_point_cloud
 from utils import list_files, read_gray
 
@@ -43,53 +45,50 @@ if __name__ == '__main__':
     smax = 0
 
     json_str = {}
+    fig = plt.figure(figsize=(8, 8))
+
+    f = "apple-1.png"
+    # if True:
     for f in files:
         sk_file = f.replace("full", "skel")
         pt_file = os.path.join(PT_PATH, f)
         pt_size = os.stat(pt_file).st_size
-        # pt = np.array(read_points(pt_file))
         sk_file = os.path.join(SK_PATH, sk_file)
         sk_size = os.stat(sk_file).st_size
-        # sk = np.array(read_points(sk_file))
-        # pts = np.append(pts, pt, axis=0)
-        # sks = np.append(sks, sk, axis=0)
-        #if pt.shape[0] > maxplen:
-        #    p = pc_file
-        #if sk.shape[0] > maxslen:
-        #    s = sk_file
-        #maxplen = max(maxplen, pt.shape[0])
-        #maxslen = max(maxslen, sk.shape[0])
-        #pmax = max(pmax, np.amax(pt))
-        #pmin = min(pmin, np.amin(pt))
-        #smax = max(smax, np.amax(sk))
-        #smin = min(smin, np.amin(sk))
         
-        # plot_2d_point_cloud(pts, sks)
-        print(pt_file, pt_size)
         pt_data =  read_gray(pt_file)
-        print(pt_data.shape)
-        print(pt_data.dtype)
-        print(pt_data)
 
-        print(sk_file, sk_size)
         sk_data =  read_gray(sk_file)
-        print(sk_data.shape)
-        print(sk_data.dtype)
-        print(np.unique(sk_data))
+        x = []
+        y = []
         for i in range(sk_data.shape[0]):
             for j in range(sk_data.shape[1]):
-                print(sk_data[i, j, 0], end= " ")
+                m = sk_data[i, j, 0] + sk_data[i, j, 1] + sk_data[i, j, 2]
+                if m > 0:
+                    x.append(j)
+                    y.append(i)
 
         key = f + str(pt_size)
+        points = {}
+        for i in range(len(x)):
+            points[i] = {
+                            "shape_attributes": {
+                                "name": "point",
+                                "cx": x[i],
+                                "cy": y[i]
+                            },
+                            "region_attributes": {}
+                        }
         value = {   "base64_img_data" : "",
                     "file_attributes" : {},
                     "filename" : f,
                     "fileref" : "",
-                    "size" : str(pt_size)
+                    "size" : str(pt_size),
+                    "regions": points
                 }
         json_str[key] = value
-        break
+        print(pt_file)
 
     with open("via.json", 'w') as outfile:
-        json.dump(json_str, outfile)
+        json.dump(json_str, outfile, indent=4, sort_keys=True)
 

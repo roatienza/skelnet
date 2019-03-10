@@ -174,10 +174,9 @@ if __name__ == '__main__':
 
 
         optimizer = Adam(lr=1e-3)
-        loss = ['binary_crossentropy', 'mae']
-        loss_weights = [1., 1.]
-        model.compile(loss=loss,
-                      loss_weights=loss_weights,
+        # loss = ['binary_crossentropy', 'mae']
+        # loss_weights = [1., 1.]
+        model.compile(loss='binary_crossentropy',
                       optimizer=optimizer,
                       metrics=['accuracy'])
         # train the model with input images and labels

@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from keras.utils import plot_model
+# from keras.utils import plot_model
 from keras.optimizers import Adam
 
 
@@ -18,6 +18,7 @@ from skimage.io import imsave
 from utils import list_files, read_gray
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
+from keras.utils.multi_gpu_utils import multi_gpu_model
 
 
 
@@ -92,7 +93,7 @@ def augment(input_pix, output_pix):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 200:
+    if epoch > 100:
         lr = 1e-4
     print('Learning rate: ', lr)
     return lr
@@ -108,6 +109,12 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true',
                         help=help_)
+    help_ = "Batch size"
+    parser.add_argument("--batch_size", type=int, default=8, help=help_)
+
+    help_ = "Number of GPUs (default is 1)"
+    parser.add_argument("--gpus", type=int, default=1, help=help_)
+
     args = parser.parse_args()
 
     infile = "in_pix.npy"
@@ -116,8 +123,9 @@ if __name__ == '__main__':
     input_pix = np.load(infile)
     print("Loading ... ", outfile) 
     output_pix = np.load(outfile)
-    input_pix, output_pix = augment(input_pix, output_pix)
 
+    print("batch size: ", args.batch_size)
+    input_pix, output_pix = augment(input_pix, output_pix)
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
     # input image dimensions.
@@ -131,9 +139,9 @@ if __name__ == '__main__':
 
     # input_shape = (256, 256, 1)
     # output_shape = (256, 256, 1)
-    model = build_generator(input_shape, output_shape)
-    model.summary()
-    plot_model(model, to_file='skelpix.png', show_shapes=True)
+    model_ = build_generator(input_shape, output_shape)
+    model_.summary()
+    #plot_model(model, to_file='skelpix.png', show_shapes=True)
 
 
     # prepare model model saving directory.
@@ -152,10 +160,17 @@ if __name__ == '__main__':
 
     if args.weights is not None:
         print("Loading weights ...", args.weights)
-        model.load_weights(args.weights)
+        model_.load_weights(args.weights)
     if not args.train:
-        predict_pix(model)
+        predict_pix(model_)
     else:
+        if args.gpus <= 1:
+            pass
+            model = model_
+        else:
+            model = multi_gpu_model(model_, gpus=args.gpus)
+
+
         optimizer = Adam(lr=1e-3)
         model.compile(loss='binary_crossentropy',
                       optimizer=optimizer,
@@ -163,7 +178,8 @@ if __name__ == '__main__':
         # train the model with input images and labels
         model.fit(input_pix,
                   output_pix,
-                  epochs=400,
-                  batch_size=8,
+                  epochs=200,
+                  batch_size=args.batch_size,
                   callbacks=callbacks)
-        model.save_weights("weights_pix.h5")
+        model_.save_weights("weights/weights_pix.h5")
+        model.save_weights("weights/weights_gpus_pix.h5")

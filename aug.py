@@ -48,10 +48,13 @@ def predict_pix(model):
         pix = np.expand_dims(pix, axis=0)
         print("Max: ", np.amax(pix))
         out_pix = model.predict(pix)
-        out_pix[out_pix<0.1] = 0.0
+        out_pix[out_pix<0.2] = 0.0
         out_pix[out_pix>0.0] = 1.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)
+        out_pix = np.expand_dims(out_pix, axis=2)
+        out_pix = np.concatenate((out_pix, out_pix, out_pix), axis=2)
+        print(out_pix.shape)
         path = os.path.join(PR_PATH, files[i])
         print("Saving ... ", path)
         imsave(path, out_pix)

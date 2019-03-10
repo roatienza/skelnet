@@ -78,5 +78,5 @@ if __name__ == '__main__':
     # parser.add_argument("--pix_file", default='coords_apple-1-full.pts', help=help_)
     args = parser.parse_args()
 
-    # pix = get_in_pix()
-    pix = get_out_pix()
+    pix = get_in_pix()
+    # pix = get_out_pix()

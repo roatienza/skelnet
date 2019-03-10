@@ -17,6 +17,7 @@ from model import build_generator
 from skimage.io import imsave
 from utils import list_files, read_gray
 from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 
 
 
@@ -67,6 +68,7 @@ def augment(input_pix, output_pix):
     output_gen = []
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
+    print("Augmenting data...")
     for i in range(16):
         for j in range(len(input_pix)):
             inp = input_pix[j]
@@ -87,6 +89,13 @@ def augment(input_pix, output_pix):
     output_pix = np.concatenate((output_pix, output_gen), axis=0)
     return input_pix, output_pix
 
+
+def lr_schedule(epoch):
+    lr = 1e-3
+    if epoch > 200:
+        lr = 1e-4
+    print('Learning rate: ', lr)
+    return lr
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -125,6 +134,22 @@ if __name__ == '__main__':
     model = build_generator(input_shape, output_shape)
     model.summary()
     plot_model(model, to_file='skelpix.png', show_shapes=True)
+
+
+    # prepare model model saving directory.
+    save_dir = os.path.join(os.getcwd(), 'weights')
+    model_name = 'skelnet_pix_model.{epoch:03d}.h5' 
+    if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+    filepath = os.path.join(save_dir, model_name)
+
+    # prepare callbacks for model saving and for learning rate adjustment.
+    checkpoint = ModelCheckpoint(filepath=filepath,
+                                 verbose=1,
+                                 save_weights_only=True)
+    lr_scheduler = LearningRateScheduler(lr_schedule)
+    callbacks = [checkpoint, lr_scheduler]
+
     if args.weights is not None:
         print("Loading weights ...", args.weights)
         model.load_weights(args.weights)
@@ -138,6 +163,7 @@ if __name__ == '__main__':
         # train the model with input images and labels
         model.fit(input_pix,
                   output_pix,
-                  epochs=200,
-                  batch_size=8)
+                  epochs=400,
+                  batch_size=8,
+                  callbacks=callbacks)
         model.save_weights("weights_pix.h5")

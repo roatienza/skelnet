@@ -125,7 +125,8 @@ if __name__ == '__main__':
     output_pix = np.load(outfile)
 
     print("batch size: ", args.batch_size)
-    input_pix, output_pix = augment(input_pix, output_pix)
+    if args.train:
+        input_pix, output_pix = augment(input_pix, output_pix)
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
     # input image dimensions.
@@ -146,7 +147,8 @@ if __name__ == '__main__':
 
     # prepare model model saving directory.
     save_dir = os.path.join(os.getcwd(), 'weights')
-    model_name = 'skelnet_pix_model.{epoch:03d}.h5' 
+    # model_name = 'skelnet_pix_model.{epoch:03d}.h5' 
+    model_name = 'skelnet_pix_model.h5' 
     if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
     filepath = os.path.join(save_dir, model_name)
@@ -181,5 +183,7 @@ if __name__ == '__main__':
                   epochs=200,
                   batch_size=args.batch_size,
                   callbacks=callbacks)
+
         model_.save_weights("weights/weights_pix.h5")
-        model.save_weights("weights/weights_gpus_pix.h5")
+        if args.gpus > 1:
+            model.save_weights("weights/weights_gpus_pix.h5")

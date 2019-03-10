@@ -22,6 +22,8 @@ from keras.preprocessing.image import ImageDataGenerator
 
 PX_PATH = "dataset/pixel/test"
 PR_PATH = "dataset/pixel/prediction"
+AP_PATH = "dataset/pixel/augtrain"
+AS_PATH = "dataset/pixel/augskel"
 
 def predict_pix(model):
     files = list_files(PX_PATH)
@@ -50,40 +52,40 @@ def predict_pix(model):
         print("Saving ... ", path)
         imsave(path, out_pix)
 
-def train(input_pix, output_pix, model):
+def augment(input_pix, output_pix):
     # we create two instances with the same arguments
-    data_gen_args = dict(featurewise_center=True,
-                         featurewise_std_normalization=True,
-                         rotation_range=90,
-                         width_shift_range=0.1,
-                         height_shift_range=0.1,
-                         zoom_range=0.2)
+    args = dict(rotation_range=180,
+                width_shift_range=0.1,
+                height_shift_range=0.05,
+                horizontal_flip=True,
+                vertical_flip=True,
+                shear_range=30,
+                zoom_range=0.2)
 
-    image_datagen = ImageDataGenerator(**data_gen_args)
-    mask_datagen = ImageDataGenerator(**data_gen_args)
+    datagen = ImageDataGenerator(**args)
+    input_gen = []
+    output_gen = []
+    print("input shape: ", input_pix.shape)
+    print("output shape: ", output_pix.shape)
+    for i in range(16):
+        for j in range(len(input_pix)):
+            inp = input_pix[j]
+            out = output_pix[j]
+            trans = datagen.get_random_transform(inp.shape)
+            inp = datagen.apply_transform(inp, trans)
+            out = datagen.apply_transform(out, trans)
+            input_gen.append(inp)
+            output_gen.append(out)
 
-    # Provide the same seed and keyword arguments to the fit and flow methods
-    seed = 1
-    image_datagen.fit(input_pix, augment=True, seed=seed)
-    mask_datagen.fit(output_pix, augment=True, seed=seed)
+    input_gen = np.array(input_gen)
+    output_gen = np.array(output_gen)
 
-    image_generator = image_datagen.flow_from_directory(
-                    'data/images',
-                    class_mode=None,
-                    seed=seed)
+    print(input_gen.shape)
+    print(output_gen.shape)
 
-    mask_generator = mask_datagen.flow_from_directory(
-                'data/masks',
-                class_mode=None,
-                seed=seed)
-
-    # combine generators into one which yields image and masks
-    train_generator = zip(image_generator, mask_generator)
-
-    model.fit_generator(
-                train_generator,
-                steps_per_epoch=2000,
-                epochs=50)
+    input_pix = np.concatenate((input_pix, input_gen), axis=0)
+    output_pix = np.concatenate((output_pix, output_gen), axis=0)
+    return input_pix, output_pix
 
 
 if __name__ == '__main__':
@@ -99,14 +101,13 @@ if __name__ == '__main__':
                         help=help_)
     args = parser.parse_args()
 
-
-   
     infile = "in_pix.npy"
     outfile = "out_pix.npy"
     print("Loading ... ", infile) 
     input_pix = np.load(infile)
     print("Loading ... ", outfile) 
     output_pix = np.load(outfile)
+    input_pix, output_pix = augment(input_pix, output_pix)
 
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
@@ -137,6 +138,6 @@ if __name__ == '__main__':
         # train the model with input images and labels
         model.fit(input_pix,
                   output_pix,
-                  epochs=400,
+                  epochs=200,
                   batch_size=8)
         model.save_weights("weights_pix.h5")

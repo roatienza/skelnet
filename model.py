@@ -10,11 +10,13 @@ from keras.layers import Activation, Dense, Input
 from keras.layers import Conv2D, Flatten
 from keras.layers import Conv2DTranspose, Dropout
 from keras.layers import BatchNormalization
+from keras.layers import LeakyReLU
 from keras.models import Model
 from keras.models import load_model
 from keras.layers.merge import concatenate
 from keras.utils import plot_model
 
+from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
 
 import numpy as np
 import argparse
@@ -24,7 +26,8 @@ def encoder_layer(inputs,
                   filters=16,
                   kernel_size=3,
                   strides=2,
-                  activation='relu'):
+                  activation='relu',
+                  instance_norm=True):
 
     conv = Conv2D(filters=filters,
                   kernel_size=kernel_size,
@@ -32,10 +35,14 @@ def encoder_layer(inputs,
                   padding='same')
 
     x = inputs
-    x = BatchNormalization()(x)
-    x = Activation(activation)(x)
+    if instance_norm:
+        x = InstanceNormalization()(x)
+    if activation == 'relu':
+        x = Activation(activation)(x)
+    else:
+        x = LeakyReLU(alpha=0.2)(x)
     x = conv(x)
-    x = Dropout(0.4)(x)
+    # x = Dropout(0.2)(x)
     return x
 
 
@@ -44,7 +51,8 @@ def decoder_layer(inputs,
                   filters=16,
                   kernel_size=3,
                   strides=2,
-                  activation='relu'):
+                  activation='relu',
+                  instance_norm=True):
 
     conv = Conv2DTranspose(filters=filters,
                            kernel_size=kernel_size,
@@ -52,18 +60,22 @@ def decoder_layer(inputs,
                            padding='same')
 
     x = inputs
-    x = BatchNormalization()(x)
-    x = Activation(activation)(x)
+    if instance_norm:
+        x = InstanceNormalization()(x)
+    if activation == 'relu':
+        x = Activation(activation)(x)
+    else:
+        x = LeakyReLU(alpha=0.2)(x)
     x = conv(x)
     x = concatenate([x, paired_inputs])
-    x = Dropout(0.4)(x)
+    # x = Dropout(0.2)(x)
     return x
 
 
-def build_unet(input_shape,
-               output_shape=None,
-               kernel_size=3,
-               name=None):
+def build_generator(input_shape,
+                    output_shape=None,
+                    kernel_size=3,
+                    name=None):
 
     inputs = Input(shape=input_shape)
     channels = int(output_shape[-1])
@@ -92,9 +104,18 @@ def build_unet(input_shape,
                        1024,
                        kernel_size=kernel_size)
     # 8 x 1024
+    e7 = encoder_layer(e6,
+                       2048,
+                       kernel_size=kernel_size)
+    # 4 x 2048
 
+    d0 = decoder_layer(e7,
+                       e6,
+                       1024,
+                       kernel_size=kernel_size)
+    # 8 x 1024+1024 
 
-    d1 = decoder_layer(e6,
+    d1 = decoder_layer(d0,
                        e5,
                        512,
                        kernel_size=kernel_size)

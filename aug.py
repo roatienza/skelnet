@@ -176,7 +176,7 @@ if __name__ == '__main__':
         optimizer = Adam(lr=1e-3)
         loss = ['binary_crossentropy', 'mae']
         loss_weights = [1., 1.]
-        model.compile(loss=,
+        model.compile(loss=loss,
                       loss_weights=loss_weights,
                       optimizer=optimizer,
                       metrics=['accuracy'])

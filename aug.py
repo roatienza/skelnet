@@ -39,20 +39,23 @@ def predict_pix(model):
     pix = np.array(pix)
     print("Shape: ", pix.shape)
     input_pix = np.expand_dims(pix, axis=3)
+    input_pix = input_pix / 255.0
     print("Final shape: ", pix.shape)
 
 
     for i in range(input_pix.shape[0]):
         pix = input_pix[i]
         pix = np.expand_dims(pix, axis=0)
+        print("Max: ", np.amax(pix))
         out_pix = model.predict(pix)
+        out_pix[out_pix<0.1] = 0.0
+        out_pix[out_pix>0.0] = 1.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)
-        # out_pix[out_pix<0.5] = 0.0
-        # out_pix[out_pix>0.0] = 1.0
         path = os.path.join(PR_PATH, files[i])
         print("Saving ... ", path)
         imsave(path, out_pix)
+
 
 def augment(input_pix, output_pix):
     # we create two instances with the same arguments

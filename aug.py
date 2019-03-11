@@ -46,8 +46,8 @@ def predict_pix(model):
     for i in range(input_pix.shape[0]):
         pix = input_pix[i]
         pix = np.expand_dims(pix, axis=0)
-        print("Max: ", np.amax(pix))
         out_pix = model.predict(pix)
+        print("Max: ", np.amax(pix))
         out_pix[out_pix<0.2] = 0.0
         out_pix[out_pix>0.0] = 1.0
         out_pix = np.squeeze(out_pix) * 255.0
@@ -62,13 +62,12 @@ def predict_pix(model):
 
 def augment(input_pix, output_pix):
     # we create two instances with the same arguments
-    args = dict(rotation_range=180,
+    args = dict(rotation_range=90,
                 width_shift_range=0.1,
-                height_shift_range=0.05,
+                height_shift_range=0.1,
                 horizontal_flip=True,
-                vertical_flip=True,
-                shear_range=30,
-                zoom_range=0.2)
+                shear_range=45,
+                zoom_range=0.3)
 
     datagen = ImageDataGenerator(**args)
     input_gen = []
@@ -99,7 +98,7 @@ def augment(input_pix, output_pix):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 100:
+    if epoch > 20:
         lr = 1e-4
     print('Learning rate: ', lr)
     return lr
@@ -188,7 +187,7 @@ if __name__ == '__main__':
         # train the model with input images and labels
         model.fit(input_pix,
                   output_pix,
-                  epochs=200,
+                  epochs=50,
                   batch_size=args.batch_size,
                   callbacks=callbacks)
 

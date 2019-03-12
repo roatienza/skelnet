@@ -16,8 +16,11 @@ from utils import list_files, read_gray
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras.optimizers import Adam
+from keras.models import Model
+from keras.layers import Input
 import datetime
 
+from other_utils import test_generator
 
 
 PT_PATH = "dataset/pixel/train"
@@ -94,7 +97,7 @@ def augment(input_pix, output_pix):
 
 
 
-def train(models, source_data, target_data batch_size=8):
+def train(models, source_data, target_data, batch_size=8):
 
     # the models
     generator, discriminator, adv = models
@@ -116,7 +119,7 @@ def train(models, source_data, target_data batch_size=8):
     train_steps = 100000
 
     rand_indexes = np.random.randint(0, source_size, size=16)
-    test_source = source_data[rand_indexes]
+    test_data = source_data[rand_indexes]
 
 
     for step in range(train_steps):
@@ -143,19 +146,12 @@ def train(models, source_data, target_data batch_size=8):
         fmt = "%s [adv loss: %f] [time: %s]"
         log = fmt % (log, metrics[0], elapsed_time)
         print(log)
-        if (step + 1) % save_interval == 0:
-            if (step + 1) == train_steps:
-                show = True
-            else:
-                show = False
-
+        if (step) % save_interval == 0:
             test_generator(generator,
-                           test_source_data,
-                           step=step+1,
-                           titles=titles,
-                           dirs=dirs,
-                           show=show)
-
+                           test_data,
+                           step=step+1)
+            # save the models after training the generators
+            generator.save_weights("weights_ganpix.h5")
 
 
 
@@ -198,8 +194,9 @@ if __name__ == '__main__':
     output_pix = np.load(outfile)
 
     print("batch size: ", args.batch_size)
-    if args.train:
-        input_pix, output_pix = augment(input_pix, output_pix)
+    #if args.train:
+    #    input_pix, output_pix = augment(input_pix, output_pix)
+
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
     # input image dimensions.
@@ -209,7 +206,6 @@ if __name__ == '__main__':
     # normalize data.
     input_pix = input_pix.astype('float32') / 255
     output_pix = output_pix.astype('float32') / 255
-
 
     generator = build_generator(input_shape, output_shape)
     generator.summary()
@@ -222,21 +218,6 @@ if __name__ == '__main__':
         plot_model(generator, to_file='discriminator.png', show_shapes=True)
 
 
-    
-
-    gave_dir = os.path.join(os.getcwd(), 'weights')
-    generatorname = 'skelnet_pix_generator.h5' 
-    if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-    filepath = os.path.join(save_dir, generatorname)
-
-    # prepare callbacks for model saving and for learning rate adjustment.
-    checkpoint = ModelCheckpoint(filepath=filepath,
-                                 verbose=1,
-                                 save_weights_only=True)
-    lr_scheduler = LearningRateScheduler(lr_schedule)
-    callbacks = [checkpoint, lr_scheduler]
-
     if args.weights is not None:
         print("Loading weights ...", args.weights)
         generator.load_weights(args.weights)
@@ -244,12 +225,14 @@ if __name__ == '__main__':
         predict_pix(generator)
         # predict_pix(generator, PT_PATH)
     else:
-        optimizer = Adam(lr=1e-3)
+        optimizer = Adam(lr=2e-4, decay=6e-8)
         discriminator.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
         discriminator.trainable = False
 
-        adversarial = Model(inputs, discriminator(generator(inputs)), name="adv")
+        source_input = Input(shape=input_shape)
+        adversarial = Model(source_input, discriminator(generator(source_input)), name="adv")
         # LSGAN uses MSE loss [2]
+        optimizer = Adam(lr=1e-4, decay=3e-8)
         adversarial.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
         adversarial.summary()
 

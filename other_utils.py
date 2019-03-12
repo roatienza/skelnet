@@ -81,6 +81,7 @@ def test_generator(generator,
     """
 
     imgs = generator.predict(test_data)
+    print("imgs shape: ", imgs.shape)
 
     filename = '%06d.png' % step
     step = " Step: {:,}".format(step)

@@ -15,12 +15,12 @@ from skimage.io import imsave
 from utils import list_files, read_gray
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 from keras.models import Model
 from keras.layers import Input
 import datetime
 
-from other_utils import test_generator
+from other_utils import test_generator, display_images
 
 
 PT_PATH = "dataset/pixel/train"
@@ -120,33 +120,38 @@ def train(models, source_data, target_data, batch_size=8):
 
     rand_indexes = np.random.randint(0, source_size, size=16)
     test_data = source_data[rand_indexes]
+    display_images(test_data, filename="source.png")
 
 
     for step in range(train_steps):
         # sample a batch of real target data
         rand_indexes = np.random.randint(0, target_size, size=batch_size)
         real_target = target_data[rand_indexes]
+        real_source = source_data[rand_indexes]
 
         # sample a batch of real source data
         rand_indexes = np.random.randint(0, source_size, size=batch_size)
-        real_source = source_data[rand_indexes]
+        fake_source = source_data[rand_indexes]
         # generate a batch of fake target data fr real source data
-        fake_target = generator.predict(real_source)
+        fake_target = generator.predict(fake_source)
+        # fake_pair = [fake_source, fake_target]
         
+        real_fake_source = np.concatenate( (real_source, fake_source) )
+        real_fake_target = np.concatenate( (real_target, fake_target) )
         # combine real and fake into one batch
-        x = np.concatenate((real_target, fake_target))
+        # x = np.concatenate((real_pair, fake_pair))
         # train the target discriminator using fake/real data
-        metrics = discriminator.train_on_batch(x, valid_fake)
+        metrics = discriminator.train_on_batch([real_fake_source, real_fake_target], valid_fake)
         log = "%d: [d_target loss: %f]" % (step, metrics[0])
 
-        rand_indexes = np.random.randint(0, source_size, size=2*batch_size)
+        rand_indexes = np.random.randint(0, source_size, size=batch_size)
         real_source = source_data[rand_indexes]
-        metrics = adv.train_on_batch(real_source, valid_valid)
+        metrics = adv.train_on_batch(real_source, valid)
         elapsed_time = datetime.datetime.now() - start_time
         fmt = "%s [adv loss: %f] [time: %s]"
         log = fmt % (log, metrics[0], elapsed_time)
         print(log)
-        if (step) % save_interval == 0:
+        if (step + 1) % save_interval == 0 or step == 0:
             test_generator(generator,
                            test_data,
                            step=step+1)
@@ -165,8 +170,12 @@ def lr_schedule(epoch):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    help_ = "Load weights"
-    parser.add_argument("--weights",
+    help_ = "Gen weights"
+    parser.add_argument("--gen",
+                        default=None,
+                        help=help_)
+    help_ = "Dis weights"
+    parser.add_argument("--dis",
                         default=None,
                         help=help_)
     help_ = "Train"
@@ -176,6 +185,11 @@ if __name__ == '__main__':
                         help=help_)
     help_ = "Plot model"
     parser.add_argument("--plot",
+                        default=False,
+                        action='store_true',
+                        help=help_)
+    help_ = "Aug"
+    parser.add_argument("--aug",
                         default=False,
                         action='store_true',
                         help=help_)
@@ -195,8 +209,8 @@ if __name__ == '__main__':
     output_pix = np.load(outfile)
 
     print("batch size: ", args.batch_size)
-    #if args.train:
-    #    input_pix, output_pix = augment(input_pix, output_pix)
+    if args.aug:
+        input_pix, output_pix = augment(input_pix, output_pix)
 
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
@@ -211,35 +225,35 @@ if __name__ == '__main__':
     generator = build_generator(input_shape, output_shape)
     generator.summary()
 
-    discriminator = build_discriminator(input_shape)
+    discriminator = build_discriminator(input_shape, output_shape)
     discriminator.summary()
     if args.plot:
         from keras.utils import plot_model
         plot_model(generator, to_file='generator.png', show_shapes=True)
         plot_model(discriminator, to_file='discriminator.png', show_shapes=True)
 
+    if args.gen is not None:
+        print("Loading generator weights ...", args.gen)
+        generator.load_weights(args.gen)
+    if args.dis is not None:
+        print("Loading discriminator weights ...", args.dis)
+        discriminator.load_weights(args.dis)
 
-    if args.weights is not None:
-        print("Loading weights ...", args.weights)
-        generator.load_weights(args.weights)
     if not args.train:
         predict_pix(generator)
-        # predict_pix(generator, PT_PATH)
     else:
-        optimizer = Adam(lr=2e-4, decay=6e-8)
+        optimizer = Adam(lr=2e-4)
         discriminator.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
-        discriminator.trainable = False
 
+        discriminator.trainable = False
         source_input = Input(shape=input_shape)
-        adversarial = Model(source_input, discriminator(generator(source_input)), name="adv")
-        # LSGAN uses MSE loss [2]
-        optimizer = Adam(lr=1e-4, decay=3e-8)
+        adversarial = Model(source_input, discriminator([source_input, generator(source_input)]), name="adv")
+        optimizer = Adam(lr=1e-4)
         adversarial.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
-        adversarial.summary()
+        #adversarial.summary()
 
         # train discriminator and adversarial networks
         models = (generator, discriminator, adversarial)
-        # params = (batch_size, latent_size, train_steps, model_name)
         train(models, input_pix, output_pix, args.batch_size)
 
 

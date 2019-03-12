@@ -153,11 +153,14 @@ def build_generator(input_shape,
 
 
 def build_discriminator(input_shape,
+                        output_shape,
                         kernel_size=3,
                         name=None):
 
     inputs = Input(shape=input_shape)
-    x = encoder_layer(inputs,
+    outputs = Input(shape=output_shape)
+    x = concatenate([inputs, outputs])
+    x = encoder_layer(x,
                       32,
                       kernel_size=kernel_size,
                       activation='leaky_relu',
@@ -197,8 +200,8 @@ def build_discriminator(input_shape,
 
     x = Flatten()(x)
     x = Dense(1)(x)
-    outputs = Activation('linear')(x)
-    discriminator = Model(inputs, outputs, name=name)
+    preal = Activation('linear')(x)
+    discriminator = Model([inputs, outputs], preal, name=name)
 
     return discriminator
 

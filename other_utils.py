@@ -75,7 +75,7 @@ def test_generator(generator,
                    test_data,
                    step,
                    title="",
-                   dirs="gan",
+                   dirs=None,
                    show=False):
     """Test the generator models
 

@@ -152,6 +152,57 @@ def build_generator(input_shape,
     return unet
 
 
+def build_discriminator(input_shape,
+                        kernel_size=3,
+                        name=None):
+
+    inputs = Input(shape=input_shape)
+    x = encoder_layer(inputs,
+                      32,
+                      kernel_size=kernel_size,
+                      activation='leaky_relu',
+                      instance_norm=False)
+    # 128x128x32
+    x = encoder_layer(x,
+                      64,
+                      kernel_size=kernel_size,
+                      activation='leaky_relu',
+                      instance_norm=False)
+    # 64x64x64
+    x = encoder_layer(x,
+                      128,
+                      kernel_size=kernel_size,
+                      activation='leaky_relu',
+                      instance_norm=False)
+    # 32x32x128
+    x = encoder_layer(x,
+                      256,
+                      kernel_size=kernel_size,
+                      activation='leaky_relu',
+                      instance_norm=False)
+    # 16x16x256
+    x = encoder_layer(x,
+                      512,
+                      kernel_size=kernel_size,
+                      activation='leaky_relu',
+                      instance_norm=False)
+    # 8x8x512
+    x = encoder_layer(x,
+                      1024,
+                      kernel_size=kernel_size,
+                      strides=1,
+                      activation='leaky_relu',
+                      instance_norm=False)
+    # 8x8x1024
+
+    x = Flatten()(x)
+    x = Dense(1)(x)
+    outputs = Activation('linear')(x)
+    discriminator = Model(inputs, outputs, name=name)
+
+    return discriminator
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     help_ = "Train cifar10 colorization"

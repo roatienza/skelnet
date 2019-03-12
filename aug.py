@@ -22,16 +22,15 @@ from keras.utils.multi_gpu_utils import multi_gpu_model
 
 
 
+PT_PATH = "dataset/pixel/train"
 PX_PATH = "dataset/pixel/test"
-PR_PATH = "dataset/pixel/prediction"
-AP_PATH = "dataset/pixel/augtrain"
-AS_PATH = "dataset/pixel/augskel"
+PR_PATH = "dataset/pixel/root"
 
-def predict_pix(model):
-    files = list_files(PX_PATH)
+def predict_pix(model, path=PX_PATH):
+    files = list_files(path)
     pix = []
     for f in files:
-        pix_file = os.path.join(PX_PATH, f)
+        pix_file = os.path.join(path, f)
         pix_data =  read_gray(pix_file)
         print(pix_file)
         pix.append(pix_data)
@@ -48,7 +47,7 @@ def predict_pix(model):
         pix = np.expand_dims(pix, axis=0)
         out_pix = model.predict(pix)
         print("Max: ", np.amax(pix))
-        out_pix[out_pix<0.2] = 0.0
+        out_pix[out_pix<0.1] = 0.0
         out_pix[out_pix>0.0] = 1.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)
@@ -170,6 +169,7 @@ if __name__ == '__main__':
         model_.load_weights(args.weights)
     if not args.train:
         predict_pix(model_)
+        # predict_pix(model_, PT_PATH)
     else:
         if args.gpus <= 1:
             pass

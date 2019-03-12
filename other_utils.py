@@ -43,7 +43,7 @@ def display_images(imgs,
     side = int(math.sqrt(imgs.shape[0]))
     assert int(side * side) == imgs.shape[0]
 
-    plt.figure(figsize=(10,10))
+    plt.figure(figsize=(12,12))
     # create saved_images folder
     if imgs_dir is None:
         imgs_dir = 'saved_images'
@@ -51,24 +51,31 @@ def display_images(imgs,
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
     filename = os.path.join(imgs_dir, filename)
-    # rows, cols, channels = img_shape
     if channels==1:
         imgs = imgs.reshape((side, side, rows, cols))
     else:
         imgs = imgs.reshape((side, side, rows, cols, channels))
     imgs = np.vstack([np.hstack(i) for i in imgs])
-    plt.figure()
+
+    # plt.figure()
     plt.axis('off')
     plt.title(title)
+    print("imgs shape: ", imgs.shape)
+    #for i in range(side * side):
+    #    plt.subplot(rows, rows, i + 1)
+    #    image = np.reshape(imgs[i], [rows, cols])
+    #    plt.imshow(image, cmap='gray')
+    #    #plt.axis('off')
+        #plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+
     if channels==1:
+        print("Gray")
         plt.imshow(imgs, interpolation='none', cmap='gray')
     else:
+        print("Color")
         plt.imshow(imgs, interpolation='none')
     plt.savefig(filename)
-    if show:
-        plt.show()
-    
-    plt.close('all')
+    # plt.close('all')
 
 
 def test_generator(generator,
@@ -82,7 +89,6 @@ def test_generator(generator,
     """
 
     imgs = generator.predict(test_data)
-    print("imgs shape: ", imgs.shape)
 
     filename = '%06d.png' % step
     step = " Step: {:,}".format(step)

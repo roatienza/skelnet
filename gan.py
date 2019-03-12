@@ -66,8 +66,8 @@ def augment(input_pix, output_pix):
                 width_shift_range=0.1,
                 height_shift_range=0.1,
                 horizontal_flip=True,
-                shear_range=45,
-                zoom_range=0.3)
+                shear_range=15,
+                zoom_range=0.1)
 
     datagen = ImageDataGenerator(**args)
     input_gen = []
@@ -116,7 +116,7 @@ def train(models, source_data, target_data, batch_size=8):
     valid_fake = np.concatenate((valid, fake))
     valid_valid = np.concatenate((valid, valid))
     start_time = datetime.datetime.now()
-    train_steps = 100000
+    train_steps = 400000
 
     rand_indexes = np.random.randint(0, source_size, size=16)
     test_data = source_data[rand_indexes]
@@ -137,6 +137,8 @@ def train(models, source_data, target_data, batch_size=8):
         # fake_pair = [fake_source, fake_target]
         
         real_fake_source = np.concatenate( (real_source, fake_source) )
+        # print(real_fake_source.shape)
+        # print(valid_fake.shape)
         real_fake_target = np.concatenate( (real_target, fake_target) )
         # combine real and fake into one batch
         # x = np.concatenate((real_pair, fake_pair))
@@ -242,13 +244,13 @@ if __name__ == '__main__':
     if not args.train:
         predict_pix(generator)
     else:
-        optimizer = Adam(lr=2e-4)
+        optimizer = RMSprop(lr=2e-4)
         discriminator.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
 
         discriminator.trainable = False
         source_input = Input(shape=input_shape)
         adversarial = Model(source_input, discriminator([source_input, generator(source_input)]), name="adv")
-        optimizer = Adam(lr=1e-4)
+        optimizer = RMSprop(lr=1e-4)
         adversarial.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
         #adversarial.summary()
 

@@ -106,7 +106,7 @@ def train(models, source_data, target_data, batch_size=8):
     # train dataset
 
     # the generator image is saved every 2000 steps
-    save_interval = 2000
+    save_interval = 500
     target_size = target_data.shape[0]
     source_size = source_data.shape[0]
 
@@ -151,7 +151,8 @@ def train(models, source_data, target_data, batch_size=8):
                            test_data,
                            step=step+1)
             # save the models after training the generators
-            generator.save_weights("weights_ganpix.h5")
+            generator.save_weights("generator.h5")
+            discriminator.save_weights("discriminator.h5")
 
 
 

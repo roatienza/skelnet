@@ -43,6 +43,7 @@ def display_images(imgs,
     side = int(math.sqrt(imgs.shape[0]))
     assert int(side * side) == imgs.shape[0]
 
+    plt.figure(figsize=(10,10))
     # create saved_images folder
     if imgs_dir is None:
         imgs_dir = 'saved_images'

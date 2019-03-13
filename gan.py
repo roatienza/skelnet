@@ -63,12 +63,10 @@ def predict_pix(model, path=PX_PATH):
 def augment(input_pix, output_pix):
     # we create two instances with the same arguments
     args = dict(rotation_range=30,
-                width_shift_range=0.05,
-                height_shift_range=0.05,
-                horizontal_flip=True,
-                vertical_flip=True,
-                shear_range=10,
-                zoom_range=0.05)
+                width_shift_range=0.02,
+                height_shift_range=0.02,
+                # shear_range=10,
+                zoom_range=0.02)
 
     datagen = ImageDataGenerator(**args)
     input_gen = []
@@ -76,7 +74,7 @@ def augment(input_pix, output_pix):
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
     print("Augmenting data...")
-    for i in range(16):
+    for i in range(8):
         for j in range(len(input_pix)):
             inp = input_pix[j]
             out = output_pix[j]
@@ -147,10 +145,10 @@ def train(models, source_data, target_data, batch_size=8):
         metrics = discriminator.train_on_batch([real_fake_source, real_fake_target], valid_fake)
         log = "%d: [d_target loss: %f]" % (step, metrics)
 
-        rand_indexes = np.random.randint(0, source_size, size=batch_size)
+        rand_indexes = np.random.randint(0, source_size, size=2*batch_size)
         real_source = source_data[rand_indexes]
         real_target = target_data[rand_indexes]
-        metrics = adv.train_on_batch(real_source, [valid, real_target])
+        metrics = adv.train_on_batch(real_source, [valid_valid, real_target])
         #fmt = "%s [adv loss: %f] "
         #log = fmt % (log, metrics[0])
 
@@ -262,7 +260,7 @@ if __name__ == '__main__':
         outputs = generator(source_input)
         adversarial = Model(source_input, [discriminator([source_input, generator(source_input)]), outputs], name="adv")
         optimizer = RMSprop(lr=1e-4)
-        loss_weights = [1.0, 10.0]
+        loss_weights = [1.0, 2.0]
         loss = ['mse', 'binary_crossentropy']
         # adversarial.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
         adversarial.compile(loss=loss, loss_weights=loss_weights, optimizer=optimizer)
@@ -270,10 +268,11 @@ if __name__ == '__main__':
 
         # train discriminator and adversarial networks
         models = (generator, discriminator, adversarial)
-        generator.compile(loss='binary_crossentropy',
-                          optimizer=optimizer,
-                          metrics=['accuracy'])
         train(models, input_pix, output_pix, args.batch_size)
+
+        #generator.compile(loss='binary_crossentropy',
+        #                  optimizer=optimizer,
+        #                  metrics=['accuracy'])
 
         # train the model with input images and labels
         #generator.fit(input_pix,

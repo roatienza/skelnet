@@ -62,12 +62,12 @@ def predict_pix(model, path=PX_PATH):
 
 def augment(input_pix, output_pix):
     # we create two instances with the same arguments
-    args = dict(rotation_range=90,
+    args = dict(rotation_range=30,
                 width_shift_range=0.05,
                 height_shift_range=0.05,
                 horizontal_flip=True,
                 vertical_flip=True,
-                shear_range=15,
+                shear_range=10,
                 zoom_range=0.05)
 
     datagen = ImageDataGenerator(**args)
@@ -145,22 +145,23 @@ def train(models, source_data, target_data, batch_size=8):
         # x = np.concatenate((real_pair, fake_pair))
         # train the target discriminator using fake/real data
         metrics = discriminator.train_on_batch([real_fake_source, real_fake_target], valid_fake)
-        log = "%d: [d_target loss: %f]" % (step, metrics[0])
+        log = "%d: [d_target loss: %f]" % (step, metrics)
 
         rand_indexes = np.random.randint(0, source_size, size=batch_size)
         real_source = source_data[rand_indexes]
-        metrics = adv.train_on_batch(real_source, valid)
-        fmt = "%s [adv loss: %f] "
-        log = fmt % (log, metrics[0])
-
-        rand_indexes = np.random.randint(0, target_size, size=batch_size)
         real_target = target_data[rand_indexes]
-        real_source = source_data[rand_indexes]
-        metrics = generator.train_on_batch(real_source, real_target)
+        metrics = adv.train_on_batch(real_source, [valid, real_target])
+        #fmt = "%s [adv loss: %f] "
+        #log = fmt % (log, metrics[0])
+
+        #rand_indexes = np.random.randint(0, target_size, size=batch_size)
+        #real_target = target_data[rand_indexes]
+        #real_source = source_data[rand_indexes]
+        #metrics = generator.train_on_batch(real_source, real_target)
 
         elapsed_time = datetime.datetime.now() - start_time
-        fmt = "%s [gen loss: %f] [time: %s]"
-        log = fmt % (log, metrics[0], elapsed_time)
+        fmt = "%s [net loss: %f] [adv loss: %f] [gen loss: %f] [time: %s]"
+        log = fmt % (log, metrics[0], metrics[1], metrics[2], elapsed_time)
         print(log)
         if (step + 1) % save_interval == 0 or step == 0:
             test_generator(generator,
@@ -254,14 +255,18 @@ if __name__ == '__main__':
         predict_pix(generator)
     else:
         optimizer = RMSprop(lr=2e-4)
-        discriminator.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
+        discriminator.compile(loss='mse', optimizer=optimizer)
 
         discriminator.trainable = False
         source_input = Input(shape=input_shape)
-        adversarial = Model(source_input, discriminator([source_input, generator(source_input)]), name="adv")
+        outputs = generator(source_input)
+        adversarial = Model(source_input, [discriminator([source_input, generator(source_input)]), outputs], name="adv")
         optimizer = RMSprop(lr=1e-4)
-        adversarial.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
-        #adversarial.summary()
+        loss_weights = [1.0, 10.0]
+        loss = ['mse', 'binary_crossentropy']
+        # adversarial.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
+        adversarial.compile(loss=loss, loss_weights=loss_weights, optimizer=optimizer)
+        adversarial.summary()
 
         # train discriminator and adversarial networks
         models = (generator, discriminator, adversarial)

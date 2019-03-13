@@ -48,7 +48,7 @@ def predict_pix(model, path=PX_PATH):
         pix = np.expand_dims(pix, axis=0)
         out_pix = generator.predict(pix)
         print("Max: ", np.amax(pix))
-        out_pix[out_pix<0.1] = 0.0
+        out_pix[out_pix<0.2] = 0.0
         out_pix[out_pix>0.0] = 1.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)
@@ -63,11 +63,12 @@ def predict_pix(model, path=PX_PATH):
 def augment(input_pix, output_pix):
     # we create two instances with the same arguments
     args = dict(rotation_range=90,
-                width_shift_range=0.1,
-                height_shift_range=0.1,
+                width_shift_range=0.05,
+                height_shift_range=0.05,
                 horizontal_flip=True,
+                vertical_flip=True,
                 shear_range=15,
-                zoom_range=0.1)
+                zoom_range=0.05)
 
     datagen = ImageDataGenerator(**args)
     input_gen = []
@@ -149,8 +150,16 @@ def train(models, source_data, target_data, batch_size=8):
         rand_indexes = np.random.randint(0, source_size, size=batch_size)
         real_source = source_data[rand_indexes]
         metrics = adv.train_on_batch(real_source, valid)
+        fmt = "%s [adv loss: %f] "
+        log = fmt % (log, metrics[0])
+
+        rand_indexes = np.random.randint(0, target_size, size=batch_size)
+        real_target = target_data[rand_indexes]
+        real_source = source_data[rand_indexes]
+        metrics = generator.train_on_batch(real_source, real_target)
+
         elapsed_time = datetime.datetime.now() - start_time
-        fmt = "%s [adv loss: %f] [time: %s]"
+        fmt = "%s [gen loss: %f] [time: %s]"
         log = fmt % (log, metrics[0], elapsed_time)
         print(log)
         if (step + 1) % save_interval == 0 or step == 0:
@@ -256,13 +265,11 @@ if __name__ == '__main__':
 
         # train discriminator and adversarial networks
         models = (generator, discriminator, adversarial)
+        generator.compile(loss='binary_crossentropy',
+                          optimizer=optimizer,
+                          metrics=['accuracy'])
         train(models, input_pix, output_pix, args.batch_size)
 
-
-
-        #generator.compile(loss='binary_crossentropy',
-        #              optimizer=optimizer,
-        #              metrics=['accuracy'])
         # train the model with input images and labels
         #generator.fit(input_pix,
         #          output_pix,

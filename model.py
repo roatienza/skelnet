@@ -147,9 +147,9 @@ def build_generator(input_shape,
                               padding='same')(d5)
     # 256x256x1
 
-    unet = Model(inputs, outputs, name=name)
+    generator = Model(inputs, outputs, name=name)
 
-    return unet
+    return generator
 
 
 def build_discriminator(input_shape,

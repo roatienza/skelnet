@@ -174,7 +174,7 @@ def train(models, source_data, target_data, batch_size=8):
 def lr_schedule(epoch):
     lr = 1e-3
     if epoch > EPOCHS/2:
-        lr = 1e-4
+        lr = 0.5e-4
     print('Learning rate: ', lr)
     return lr
 
@@ -232,7 +232,7 @@ if __name__ == '__main__':
     input_pix = input_pix.astype('float32') / 255
     output_pix = output_pix.astype('float32') / 255
 
-    generator = build_generator(input_shape, output_shape)
+    generator = build_generator(input_shape, output_shape, kernel_size=5)
     generator.summary()
 
     #discriminator = build_discriminator(input_shape, output_shape)
@@ -270,7 +270,7 @@ if __name__ == '__main__':
         # models = (generator, discriminator, adversarial)
         #train(models, input_pix, output_pix, args.batch_size)
 
-        optimizer = Adam(lr=1e-3)
+        optimizer = Adam(lr=1e-4)
         generator.compile(loss='binary_crossentropy',
                           optimizer=optimizer,
                           metrics=['accuracy'])
@@ -290,9 +290,10 @@ if __name__ == '__main__':
         callbacks = [checkpoint, lr_scheduler]
 
         # train the model with input images and labels
-        generator.fit(input_pix,
+        inputs = [input_pix, input_pix, input_pix, input_pix]
+        generator.fit(inputs,
                       output_pix,
-                      epochs=100,
+                      epochs=EPOCHS,
                       batch_size=args.batch_size,
                       callbacks=callbacks)
 

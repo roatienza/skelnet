@@ -77,9 +77,15 @@ def build_generator(input_shape,
                     kernel_size=3,
                     name=None):
 
-    inputs1 = Input(shape=input_shape)
+    inputs = Input(shape=input_shape)
+    outputs0 = encoder_layer(inputs,
+                             32,
+                             strides=1,
+                             kernel_size=kernel_size)
+
+    # inputs1 = Input(shape=input_shape)
     channels = int(output_shape[-1])
-    e11 = encoder_layer(inputs1,
+    e11 = encoder_layer(outputs0,
                         32,
                         kernel_size=kernel_size)
     # 128x128 x 32
@@ -137,8 +143,8 @@ def build_generator(input_shape,
     # 256x256 x channels
 
 
-    inputs2 = Input(shape=input_shape)
-    e21 = encoder_layer(inputs2,
+    # inputs2 = Input(shape=input_shape)
+    e21 = encoder_layer(outputs0,
                         32,
                         strides=4,
                         kernel_size=kernel_size)
@@ -172,8 +178,8 @@ def build_generator(input_shape,
                                padding='same')(d22)
     # 256x256 x 1
 
-    inputs3 = Input(shape=input_shape)
-    e31 = encoder_layer(inputs3,
+    # inputs3 = Input(shape=input_shape)
+    e31 = encoder_layer(outputs0,
                         32,
                         strides=8,
                         kernel_size=kernel_size)
@@ -195,12 +201,6 @@ def build_generator(input_shape,
                                strides=8,
                                padding='same')(d31)
 
-    inputs0 = Input(shape=input_shape)
-    outputs0 = encoder_layer(inputs0,
-                             32,
-                             strides=1,
-                             kernel_size=kernel_size)
-
     y = concatenate([outputs0, outputs1, outputs2, outputs3])
     y = Conv2DTranspose(channels,
                         kernel_size=1,
@@ -213,7 +213,7 @@ def build_generator(input_shape,
                         padding='same')(y)
     outputs = y
 
-    generator = Model([inputs0, inputs1, inputs2, inputs3], outputs, name=name)
+    generator = Model(inputs, outputs, name=name)
 
     return generator
 

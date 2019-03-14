@@ -26,7 +26,7 @@ from other_utils import test_generator, display_images
 PT_PATH = "dataset/pixel/train"
 PX_PATH = "dataset/pixel/test"
 PR_PATH = "dataset/pixel/root"
-EPOCHS = 100
+EPOCHS = 200
 
 def predict_pix(model, path=PX_PATH):
     files = list_files(path)
@@ -63,8 +63,7 @@ def predict_pix(model, path=PX_PATH):
 
 def augment(input_pix, output_pix):
     # we create two instances with the same arguments
-    args = dict(rotation_range=30,
-                shear_range=10,
+    args = dict(rotation_range=90,
                 horizontal_flip=True,
                 zoom_range=[0.8, 1.])
 
@@ -74,7 +73,7 @@ def augment(input_pix, output_pix):
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
     print("Augmenting data...")
-    for i in range(16):
+    for i in range(8):
         for j in range(len(input_pix)):
             inp = input_pix[j]
             out = output_pix[j]
@@ -173,11 +172,11 @@ def train(models, source_data, target_data, batch_size=8):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > EPOCHS/4:
+    if epoch > 20:
         lr = 0.5e-3
-    elif epoch > EPOCHS/2:
+    elif epoch > 40:
         lr = 1e-4
-    elif epoch > 3*EPOCHS/4:
+    elif epoch > 100:
         lr = 0.5e-4
     print('Learning rate: ', lr)
     return lr
@@ -295,7 +294,7 @@ if __name__ == '__main__':
 
         # train the model with input images and labels
         inputs = [input_pix, input_pix, input_pix, input_pix]
-        generator.fit(input_pix,
+        generator.fit(inputs,
                       output_pix,
                       epochs=EPOCHS,
                       batch_size=args.batch_size,

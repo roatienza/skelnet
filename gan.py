@@ -26,6 +26,7 @@ from other_utils import test_generator, display_images
 PT_PATH = "dataset/pixel/train"
 PX_PATH = "dataset/pixel/test"
 PR_PATH = "dataset/pixel/root"
+EPOCHS = 100
 
 def predict_pix(model, path=PX_PATH):
     files = list_files(path)
@@ -63,10 +64,9 @@ def predict_pix(model, path=PX_PATH):
 def augment(input_pix, output_pix):
     # we create two instances with the same arguments
     args = dict(rotation_range=30,
-                width_shift_range=0.02,
-                height_shift_range=0.02,
-                # shear_range=10,
-                zoom_range=0.02)
+                shear_range=10,
+                horizontal_flip=True,
+                zoom_range=[0.8, 1.])
 
     datagen = ImageDataGenerator(**args)
     input_gen = []
@@ -74,7 +74,7 @@ def augment(input_pix, output_pix):
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
     print("Augmenting data...")
-    for i in range(8):
+    for i in range(16):
         for j in range(len(input_pix)):
             inp = input_pix[j]
             out = output_pix[j]
@@ -173,7 +173,7 @@ def train(models, source_data, target_data, batch_size=8):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 20:
+    if epoch > EPOCHS/2:
         lr = 1e-4
     print('Learning rate: ', lr)
     return lr
@@ -235,8 +235,8 @@ if __name__ == '__main__':
     generator = build_generator(input_shape, output_shape)
     generator.summary()
 
-    discriminator = build_discriminator(input_shape, output_shape)
-    discriminator.summary()
+    #discriminator = build_discriminator(input_shape, output_shape)
+    #discriminator.summary()
     if args.plot:
         from keras.utils import plot_model
         plot_model(generator, to_file='generator.png', show_shapes=True)
@@ -247,38 +247,53 @@ if __name__ == '__main__':
         generator.load_weights(args.gen)
     if args.dis is not None:
         print("Loading discriminator weights ...", args.dis)
-        discriminator.load_weights(args.dis)
+        #discriminator.load_weights(args.dis)
 
     if not args.train:
         predict_pix(generator)
     else:
-        optimizer = RMSprop(lr=2e-4)
-        discriminator.compile(loss='mse', optimizer=optimizer)
+        #optimizer = RMSprop(lr=2e-4)
+        #discriminator.compile(loss='mse', optimizer=optimizer)
 
-        discriminator.trainable = False
-        source_input = Input(shape=input_shape)
-        outputs = generator(source_input)
-        adversarial = Model(source_input, [discriminator([source_input, generator(source_input)]), outputs], name="adv")
-        optimizer = RMSprop(lr=1e-4)
-        loss_weights = [1.0, 2.0]
-        loss = ['mse', 'binary_crossentropy']
+        #discriminator.trainable = False
+        #source_input = Input(shape=input_shape)
+        #outputs = generator(source_input)
+        #adversarial = Model(source_input, [discriminator([source_input, generator(source_input)]), outputs], name="adv")
+        #optimizer = RMSprop(lr=1e-4)
+        #loss_weights = [1.0, 2.0]
+        #loss = ['mse', 'binary_crossentropy']
         # adversarial.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
-        adversarial.compile(loss=loss, loss_weights=loss_weights, optimizer=optimizer)
-        adversarial.summary()
+        #adversarial.compile(loss=loss, loss_weights=loss_weights, optimizer=optimizer)
+        #adversarial.summary()
 
         # train discriminator and adversarial networks
-        models = (generator, discriminator, adversarial)
-        train(models, input_pix, output_pix, args.batch_size)
+        # models = (generator, discriminator, adversarial)
+        #train(models, input_pix, output_pix, args.batch_size)
 
-        #generator.compile(loss='binary_crossentropy',
-        #                  optimizer=optimizer,
-        #                  metrics=['accuracy'])
+        optimizer = Adam(lr=1e-3)
+        generator.compile(loss='binary_crossentropy',
+                          optimizer=optimizer,
+                          metrics=['accuracy'])
+
+        # prepare model model saving directory.
+        save_dir = os.path.join(os.getcwd(), 'weights')
+        model_name = 'skelnet_pix_model.h5' 
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+        filepath = os.path.join(save_dir, model_name)
+
+        # prepare callbacks for model saving and for learning rate adjustment.
+        checkpoint = ModelCheckpoint(filepath=filepath,
+                                     verbose=1,
+                                     save_weights_only=True)
+        lr_scheduler = LearningRateScheduler(lr_schedule)
+        callbacks = [checkpoint, lr_scheduler]
 
         # train the model with input images and labels
-        #generator.fit(input_pix,
-        #          output_pix,
-        #          epochs=50,
-        #          batch_size=args.batch_size,
-        #          callbacks=callbacks)
+        generator.fit(input_pix,
+                      output_pix,
+                      epochs=100,
+                      batch_size=args.batch_size,
+                      callbacks=callbacks)
 
-        #generator.save_weights("weights/weights_pix.h5")
+        generator.save_weights("weights/weights_pix.h5")

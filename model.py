@@ -78,7 +78,9 @@ def build_generator(input_shape,
                     name=None):
 
     inputs = Input(shape=input_shape)
-    outputs0 = encoder_layer(inputs,
+    x = InstanceNormalization()(inputs)
+    x = Activation('relu')(x)
+    outputs0 = encoder_layer(x,
                              32,
                              strides=1,
                              kernel_size=kernel_size)
@@ -202,10 +204,14 @@ def build_generator(input_shape,
                                padding='same')(d31)
 
     y = concatenate([outputs0, outputs1, outputs2, outputs3])
+    y = InstanceNormalization()(y)
+    y = Activation('relu')(y)
     y = Conv2DTranspose(channels,
                         kernel_size=1,
                         strides=1,
                         padding='same')(y)
+    y = InstanceNormalization()(y)
+    y = Activation('relu')(y)
     y = Conv2DTranspose(channels,
                         kernel_size=kernel_size,
                         strides=1,

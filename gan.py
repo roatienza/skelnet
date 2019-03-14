@@ -173,7 +173,11 @@ def train(models, source_data, target_data, batch_size=8):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > EPOCHS/2:
+    if epoch > EPOCHS/4:
+        lr = 0.5e-3
+    elif epoch > EPOCHS/2:
+        lr = 1e-4
+    elif epoch > 3*EPOCHS/4:
         lr = 0.5e-4
     print('Learning rate: ', lr)
     return lr
@@ -232,7 +236,7 @@ if __name__ == '__main__':
     input_pix = input_pix.astype('float32') / 255
     output_pix = output_pix.astype('float32') / 255
 
-    generator = build_generator(input_shape, output_shape, kernel_size=5)
+    generator = build_generator(input_shape, output_shape, kernel_size=3)
     generator.summary()
 
     #discriminator = build_discriminator(input_shape, output_shape)
@@ -240,7 +244,7 @@ if __name__ == '__main__':
     if args.plot:
         from keras.utils import plot_model
         plot_model(generator, to_file='generator.png', show_shapes=True)
-        plot_model(discriminator, to_file='discriminator.png', show_shapes=True)
+        # plot_model(discriminator, to_file='discriminator.png', show_shapes=True)
 
     if args.gen is not None:
         print("Loading generator weights ...", args.gen)
@@ -270,7 +274,7 @@ if __name__ == '__main__':
         # models = (generator, discriminator, adversarial)
         #train(models, input_pix, output_pix, args.batch_size)
 
-        optimizer = Adam(lr=1e-4)
+        optimizer = Adam(lr=1e-3)
         generator.compile(loss='binary_crossentropy',
                           optimizer=optimizer,
                           metrics=['accuracy'])
@@ -291,7 +295,7 @@ if __name__ == '__main__':
 
         # train the model with input images and labels
         inputs = [input_pix, input_pix, input_pix, input_pix]
-        generator.fit(inputs,
+        generator.fit(input_pix,
                       output_pix,
                       epochs=EPOCHS,
                       batch_size=args.batch_size,

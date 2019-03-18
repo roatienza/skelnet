@@ -72,22 +72,22 @@ def predict_pix(model, path=PX_PATH, ispt=False):
 
 def augment(inputs, outputs, shift=False, ispts=False):
     # we create two instances with the same arguments
-    ntimes = 1
+    ntimes = 2
     print("input shape: ", inputs.shape)
     print("output shape: ", outputs.shape)
     if shift:
         args = dict(width_shift_range=0.1,
                     height_shift_range=0.1)
-        ntimes = 1
+        ntimes = 2
         print("Augmenting data by shifting...")
     else:
         if ispts:
             args = dict(rotation_range=30,
-                        horizontal_flip=True,
+                        vertical_flip=True,
                         zoom_range=[0.8, 1.])
         else:
             args = dict(rotation_range=30,
-                        vertical_flip=True,
+                        horizontal_flip=True,
                         zoom_range=[0.8, 1.])
         print("Augmenting data...")
 
@@ -328,4 +328,19 @@ if __name__ == '__main__':
                           batch_size=args.batch_size,
                           callbacks=callbacks)
 
-        generator.save_weights("weights/weights_pix.h5")
+        optimizer = Adam(lr=1e-4)
+        generator.compile(loss='binary_crossentropy',
+                          optimizer=optimizer,
+                          metrics=['accuracy'])
+        for i in range(EPOCHS):
+            x, y = augment(input_pix, output_pix)
+            x, y = augment(x, y, shift=True)
+            x = x.astype('float32') / 255
+            y = y.astype('float32') / 255
+            inputs = [x, x, x, x]
+            generator.fit(inputs,
+                          y,
+                          epochs=1,
+                          batch_size=args.batch_size,
+                          callbacks=callbacks)
+

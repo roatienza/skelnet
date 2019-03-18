@@ -72,7 +72,7 @@ def predict_pix(model, path=PX_PATH, ispt=False):
 
 def augment(input_pix, output_pix, shift=False, ispts=False):
     # we create two instances with the same arguments
-    ntimes = 12
+    ntimes = 4
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)
     if shift:
@@ -84,8 +84,6 @@ def augment(input_pix, output_pix, shift=False, ispts=False):
         if ispts:
             args = dict(rotation_range=60,
                         vertical_flip=True,
-                        width_shift_range=0.1,
-                        height_shift_range=0.1,
                         zoom_range=[0.8, 1.])
         else:
             args = dict(rotation_range=60,
@@ -178,7 +176,7 @@ if __name__ == '__main__':
     print("batch size: ", args.batch_size)
     if args.aug:
         input_pix, output_pix = augment(input_pix, output_pix)
-        # input_pix, output_pix = augment(input_pix, output_pix, shift=True)
+        input_pix, output_pix = augment(input_pix, output_pix, shift=True)
 
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)

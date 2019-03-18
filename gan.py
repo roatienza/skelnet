@@ -28,7 +28,10 @@ PX_PATH = "dataset/pixel/test"
 PR_PATH = "dataset/pixel/root"
 EPOCHS = 200
 
-def predict_pix(model, path=PX_PATH):
+def predict_pix(model, path=PX_PATH, ispt=False):
+    if ispt:
+        path = path.replace("pixel", "point")
+        path = path.replace("test", "test_img")
     files = list_files(path)
     pix = []
     for f in files:
@@ -53,12 +56,17 @@ def predict_pix(model, path=PX_PATH):
         out_pix[out_pix<0.1] = 0.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)
-        out_pix = np.expand_dims(out_pix, axis=2)
-        out_pix = np.concatenate((out_pix, out_pix, out_pix), axis=2)
         print(out_pix.shape)
         path = os.path.join(PR_PATH, files[i])
+        if ispt:
+            path = path.replace("pixel", "point")
         print("Saving ... ", path)
-        imsave(path, out_pix)
+        if ispt:
+            imsave(path, out_pix, cmap='gray')
+        else:
+            out_pix = np.expand_dims(out_pix, axis=2)
+            out_pix = np.concatenate((out_pix, out_pix, out_pix), axis=2)
+            imsave(path, out_pix)
 
 
 def augment(input_pix, output_pix):
@@ -253,7 +261,7 @@ if __name__ == '__main__':
         #discriminator.load_weights(args.dis)
 
     if not args.train:
-        predict_pix(generator)
+        predict_pix(generator, ispt=True)
     else:
         #optimizer = RMSprop(lr=2e-4)
         #discriminator.compile(loss='mse', optimizer=optimizer)

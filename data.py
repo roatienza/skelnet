@@ -14,6 +14,7 @@ import os
 import datetime
 import scipy.misc
 import json
+from skimage.io import imsave
 
 import matplotlib.pyplot as plt
 
@@ -25,27 +26,51 @@ from utils import list_files, read_gray
 #dataset/point/full/coords_rat-09-full.pts
 #dataset/point/skel/coords_pocket-2-skel.pts
 
+PT_PATH = "dataset/pixel/test"
 PX_PATH = "dataset/pixel/train"
 SK_PATH = "dataset/pixel/skel"
 
-def get_in_pix(filename="in_pix.npy"):
-    files = list_files(PX_PATH)
+def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
+    path = PX_PATH
+    if istest:
+        path = PT_PATH
+    if isskel:
+        path = SK_PATH
+    if not ispix:
+        path = path.replace("pixel", "point")
+    files = list_files(path)
     pix = []
     for f in files:
-        pix_file = os.path.join(PX_PATH, f)
-        pix_data =  read_gray(pix_file)
+        pix_file = os.path.join(path, f)
         print(pix_file)
+        if ispix:
+            pix_data =  read_gray(pix_file)
+        else:
+            image = np.zeros((256,256), dtype=np.uint8)
+            pix_data = read_points(pix_file)
+            for p in pix_data:
+                x = min(round(p[0]), 255)
+                y = min(round(p[1]), 255)
+                image[x][y] = 255
+            impath = os.path.join("images", f + ".png")
+            print("Saving ... ", impath)
+            imsave(impath, image, cmap='gray')
+            pix_data = image
+
         pix.append(pix_data)
 
     pix = np.array(pix)
-    # pix = np.reshape(pix, [pix.shape,-1])
     print("Shape: ", pix.shape)
-    pix = np.expand_dims(pix, axis=3)
+    # print("Min: ", np.amin(p))
+    # print("Max: ", np.amax(p))
+    if not istest:
+        pix = np.expand_dims(pix, axis=3)
     print("Final shape: ", pix.shape)
     print("Min: ", np.amin(pix))
     print("Max: ", np.amax(pix))
-    print("Saving to ", filename) 
-    np.save(filename, pix)
+    if not istest:
+        print("Saving to ", filename) 
+        np.save(filename, pix)
     return pix
 
 
@@ -78,5 +103,6 @@ if __name__ == '__main__':
     # parser.add_argument("--pix_file", default='coords_apple-1-full.pts', help=help_)
     args = parser.parse_args()
 
-    pix = get_in_pix()
+    # pix = get_in_pix(filename="in_pts.npy", ispix=False, isskel=False)
+    pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=False, istest=True)
     # pix = get_out_pix()

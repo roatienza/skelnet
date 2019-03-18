@@ -69,19 +69,32 @@ def predict_pix(model, path=PX_PATH, ispt=False):
             imsave(path, out_pix)
 
 
-def augment(input_pix, output_pix):
+
+def augment(input_pix, output_pix, shift=False, ispts=False):
     # we create two instances with the same arguments
-    args = dict(rotation_range=90,
-                horizontal_flip=True,
-                zoom_range=[0.8, 1.])
+    ntimes = 4
+    print("input shape: ", input_pix.shape)
+    print("output shape: ", output_pix.shape)
+    if shift:
+        args = dict(width_shift_range=0.1,
+                    height_shift_range=0.1)
+        ntimes = 2
+        print("Augmenting data by shifting...")
+    else:
+        if ispts:
+            args = dict(rotation_range=30,
+                        horizontal_flip=True,
+                        zoom_range=[0.8, 1.])
+        else:
+            args = dict(rotation_range=30,
+                        vertical_flip=True,
+                        zoom_range=[0.8, 1.])
+        print("Augmenting data...")
 
     datagen = ImageDataGenerator(**args)
     input_gen = []
     output_gen = []
-    print("input shape: ", input_pix.shape)
-    print("output shape: ", output_pix.shape)
-    print("Augmenting data...")
-    for i in range(8):
+    for i in range(ntimes):
         for j in range(len(input_pix)):
             inp = input_pix[j]
             out = output_pix[j]
@@ -100,7 +113,6 @@ def augment(input_pix, output_pix):
     input_pix = np.concatenate((input_pix, input_gen), axis=0)
     output_pix = np.concatenate((output_pix, output_gen), axis=0)
     return input_pix, output_pix
-
 
 
 def train(models, source_data, target_data, batch_size=8):
@@ -177,17 +189,17 @@ def train(models, source_data, target_data, batch_size=8):
             discriminator.save_weights("discriminator.h5")
 
 
-
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 20:
-        lr = 0.5e-3
+    if epoch > 100:
+        lr = 0.5e-4
     elif epoch > 40:
         lr = 1e-4
-    elif epoch > 100:
-        lr = 0.5e-4
+    elif epoch > 20:
+        lr = 0.5e-3
     print('Learning rate: ', lr)
     return lr
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -222,8 +234,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    infile = "in_pix.npy"
-    outfile = "out_pix.npy"
+    infile = "in_pts.npy"
+    outfile = "out_pts.npy"
     print("Loading ... ", infile) 
     input_pix = np.load(infile)
     print("Loading ... ", outfile) 
@@ -232,6 +244,7 @@ if __name__ == '__main__':
     print("batch size: ", args.batch_size)
     if args.aug:
         input_pix, output_pix = augment(input_pix, output_pix)
+        input_pix, output_pix = augment(input_pix, output_pix, shift=True)
 
     print("input shape: ", input_pix.shape)
     print("output shape: ", output_pix.shape)

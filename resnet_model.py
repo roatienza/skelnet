@@ -83,25 +83,25 @@ def encoder_layer(inputs,
     # bottleneck residual unit
     x = inputs
     y = resnet_layer(inputs=x,
-                     num_filters=filters//2,
+                     num_filters=filters,
                      kernel_size=1,
                      strides=1,
                      activation=activation,
                      normalization=False,
                      conv_first=False)
     y = resnet_layer(inputs=y,
-                     num_filters=filters//2,
+                     num_filters=filters,
                      kernel_size=kernel_size,
                      strides=1,
                      conv_first=False)
     y = resnet_layer(inputs=y,
-                     num_filters=filters//2,
+                     num_filters=filters,
                      strides=strides,
                      kernel_size=1,
                      normalization=False,
                      conv_first=False)
     x = resnet_layer(inputs=x,
-                     num_filters=filters//2,
+                     num_filters=filters,
                      kernel_size=1,
                      strides=strides,
                      activation=None,
@@ -183,7 +183,7 @@ def build_generator(input_shape,
                         kernel_size=kernel_size)
     # 8x8 x 1024
     e17 = encoder_layer(e16,
-                        2048,
+                        1024,
                         kernel_size=kernel_size)
     # 4x4 x 2048
 

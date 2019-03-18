@@ -116,16 +116,26 @@ def augment(input_pix, output_pix, shift=False, ispts=False):
 
 
 def lr_schedule(epoch):
+    #lr = 1e-3
+    #if epoch > 100:
+    #    lr = 0.5e-4
+    #elif epoch > 40:
+    #    lr = 1e-4
+    #elif epoch > 20:
+    #    lr = 0.5e-3
+    #print('Learning rate: ', lr)
+
     lr = 1e-3
-    if epoch > 100:
-        lr = 0.5e-4
-    elif epoch > 40:
-        lr = 1e-4
-    elif epoch > 20:
-        lr = 0.5e-3
+    if epoch > 180:
+        lr *= 0.5e-3
+    elif epoch > 160:
+        lr *= 1e-3
+    elif epoch > 120:
+        lr *= 1e-2
+    elif epoch > 80:
+        lr *= 1e-1
     print('Learning rate: ', lr)
     return lr
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -202,7 +212,7 @@ if __name__ == '__main__':
 
         # prepare model model saving directory.
         save_dir = os.path.join(os.getcwd(), 'weights')
-        model_name = 'skelnet_pix_model.h5' 
+        model_name = 'skelnet_resnet_model.h5' 
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
         filepath = os.path.join(save_dir, model_name)

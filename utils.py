@@ -6,7 +6,53 @@ import os
 import math
 import skimage
 from skimage.io import imread
+from keras.preprocessing.image import ImageDataGenerator
 
+def augment(inputs, outputs, shift=False, ispts=False):
+    # we create two instances with the same arguments
+    ntimes = 1
+    print("input shape: ", inputs.shape)
+    print("output shape: ", outputs.shape)
+    if shift:
+        args = dict(width_shift_range=0.1,
+                    height_shift_range=0.1)
+        ntimes = 1
+        print("Augmenting data by shifting...")
+    else:
+        if ispts:
+            args = dict(rotation_range=30,
+                        vertical_flip=True,
+                        zoom_range=[0.8, 1.])
+        else:
+            args = dict(rotation_range=30,
+                        horizontal_flip=True,
+                        zoom_range=[0.8, 1.])
+        print("Augmenting data...")
+
+    datagen = ImageDataGenerator(**args)
+    input_gen = []
+    output_gen = []
+    for i in range(ntimes):
+        for j in range(len(inputs)):
+            inp = inputs[j]
+            out = outputs[j]
+            trans = datagen.get_random_transform(inp.shape)
+            inp = datagen.apply_transform(inp, trans)
+            out = datagen.apply_transform(out, trans)
+            input_gen.append(inp)
+            output_gen.append(out)
+
+    input_gen = np.array(input_gen)
+    output_gen = np.array(output_gen)
+
+    print(input_gen.shape)
+    print(output_gen.shape)
+
+    inputs = np.concatenate((inputs, input_gen), axis=0)
+    outputs = np.concatenate((outputs, output_gen), axis=0)
+    print("Augmented input shape: ", inputs.shape)
+    print("Augmented output shape: ", outputs.shape)
+    return inputs, outputs
 
 def read_gray(f):
     # im = skimage.img_as_float(imread(f))

@@ -52,7 +52,7 @@ def predict_pix(model, path=PX_PATH, ispt=False):
         pix = np.expand_dims(pix, axis=0)
         out_pix = generator.predict([pix, pix, pix, pix])
         print("Max: ", np.amax(pix))
-        out_pix[out_pix>=0.1] = 1.0
+        out_pix[out_pix>=0.2] = 1.0
         out_pix[out_pix<0.1] = 0.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)
@@ -70,15 +70,15 @@ def predict_pix(model, path=PX_PATH, ispt=False):
 
 
 
-def augment(input_pix, output_pix, shift=False, ispts=False):
+def augment(inputs, outputs, shift=False, ispts=False):
     # we create two instances with the same arguments
-    ntimes = 4
-    print("input shape: ", input_pix.shape)
-    print("output shape: ", output_pix.shape)
+    ntimes = 1
+    print("input shape: ", inputs.shape)
+    print("output shape: ", outputs.shape)
     if shift:
         args = dict(width_shift_range=0.1,
                     height_shift_range=0.1)
-        ntimes = 2
+        ntimes = 1
         print("Augmenting data by shifting...")
     else:
         if ispts:
@@ -95,9 +95,9 @@ def augment(input_pix, output_pix, shift=False, ispts=False):
     input_gen = []
     output_gen = []
     for i in range(ntimes):
-        for j in range(len(input_pix)):
-            inp = input_pix[j]
-            out = output_pix[j]
+        for j in range(len(inputs)):
+            inp = inputs[j]
+            out = outputs[j]
             trans = datagen.get_random_transform(inp.shape)
             inp = datagen.apply_transform(inp, trans)
             out = datagen.apply_transform(out, trans)
@@ -110,9 +110,11 @@ def augment(input_pix, output_pix, shift=False, ispts=False):
     print(input_gen.shape)
     print(output_gen.shape)
 
-    input_pix = np.concatenate((input_pix, input_gen), axis=0)
-    output_pix = np.concatenate((output_pix, output_gen), axis=0)
-    return input_pix, output_pix
+    inputs = np.concatenate((inputs, input_gen), axis=0)
+    outputs = np.concatenate((outputs, output_gen), axis=0)
+    print("Augmented input shape: ", inputs.shape)
+    print("Augmented output shape: ", outputs.shape)
+    return inputs, outputs
 
 
 def train(models, source_data, target_data, batch_size=8):
@@ -191,11 +193,11 @@ def train(models, source_data, target_data, batch_size=8):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 100:
+    if epoch > 160:
         lr = 0.5e-4
-    elif epoch > 40:
+    elif epoch > 120:
         lr = 1e-4
-    elif epoch > 20:
+    elif epoch > 80:
         lr = 0.5e-3
     print('Learning rate: ', lr)
     return lr
@@ -242,19 +244,19 @@ if __name__ == '__main__':
     output_pix = np.load(outfile)
 
     print("batch size: ", args.batch_size)
-    if args.aug:
-        input_pix, output_pix = augment(input_pix, output_pix)
-        input_pix, output_pix = augment(input_pix, output_pix, shift=True)
+    #if args.aug:
+    #    x, y = augment(input_pix, output_pix)
+    #    x, y = augment(x, y, shift=True)
 
-    print("input shape: ", input_pix.shape)
-    print("output shape: ", output_pix.shape)
+    #print("input shape: ", input_pix.shape)
+    #print("output shape: ", output_pix.shape)
     # input image dimensions.
     input_shape = input_pix.shape[1:]
     output_shape = output_pix.shape[1:]
 
     # normalize data.
-    input_pix = input_pix.astype('float32') / 255
-    output_pix = output_pix.astype('float32') / 255
+    #input_pix = input_pix.astype('float32') / 255
+    #output_pix = output_pix.astype('float32') / 255
 
     generator = build_generator(input_shape, output_shape, kernel_size=3)
     generator.summary()
@@ -314,11 +316,16 @@ if __name__ == '__main__':
         callbacks = [checkpoint, lr_scheduler]
 
         # train the model with input images and labels
-        inputs = [input_pix, input_pix, input_pix, input_pix]
-        generator.fit(inputs,
-                      output_pix,
-                      epochs=EPOCHS,
-                      batch_size=args.batch_size,
-                      callbacks=callbacks)
+        for i in range(EPOCHS):
+            x, y = augment(input_pix, output_pix)
+            x, y = augment(x, y, shift=True)
+            x = x.astype('float32') / 255
+            y = y.astype('float32') / 255
+            inputs = [x, x, x, x]
+            generator.fit(inputs,
+                          y,
+                          epochs=1,
+                          batch_size=args.batch_size,
+                          callbacks=callbacks)
 
         generator.save_weights("weights/weights_pix.h5")

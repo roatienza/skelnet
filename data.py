@@ -40,6 +40,8 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
         path = path.replace("pixel", "point")
     files = list_files(path)
     pix = []
+    pmax = 0
+    pmin = 255
     for f in files:
         pix_file = os.path.join(path, f)
         print(pix_file)
@@ -49,6 +51,14 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
             image = np.zeros((256,256), dtype=np.uint8)
             pix_data = read_points(pix_file)
             for p in pix_data:
+                if p[0]>pmax:
+                    pmax = p[0]
+                if p[0]<pmin:
+                    pmin = p[0]
+                if p[1]>pmax:
+                    pmax = p[1]
+                if p[1]<pmin:
+                    pmin = p[1]
                 x = min(round(p[0]), 255)
                 y = min(round(p[1]), 255)
                 image[x][y] = 255
@@ -61,8 +71,8 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
 
     pix = np.array(pix)
     print("Shape: ", pix.shape)
-    # print("Min: ", np.amin(p))
-    # print("Max: ", np.amax(p))
+    print("PMin: ", pmin)
+    print("PMax: ", pmax)
     if not istest:
         pix = np.expand_dims(pix, axis=3)
     print("Final shape: ", pix.shape)
@@ -70,7 +80,7 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
     print("Max: ", np.amax(pix))
     if not istest:
         print("Saving to ", filename) 
-        np.save(filename, pix)
+        # np.save(filename, pix)
     return pix
 
 
@@ -103,6 +113,6 @@ if __name__ == '__main__':
     # parser.add_argument("--pix_file", default='coords_apple-1-full.pts', help=help_)
     args = parser.parse_args()
 
-    # pix = get_in_pix(filename="in_pts.npy", ispix=False, isskel=False)
-    pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=False, istest=True)
+    pix = get_in_pix(filename="in_pts.npy", ispix=False, isskel=False)
+    # pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=False, istest=False)
     # pix = get_out_pix()

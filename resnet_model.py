@@ -30,7 +30,8 @@ def resnet_layer(inputs,
                  strides=1,
                  activation='relu',
                  normalization=True,
-                 conv_first=True):
+                 conv_first=True,
+                 transpose=False):
     """2D Convolution-Batch Normalization-Activation stack builder
 
     # Arguments
@@ -52,6 +53,13 @@ def resnet_layer(inputs,
                   padding='same',
                   kernel_initializer='he_normal',
                   kernel_regularizer=l2(1e-4))
+    if transpose:
+        conv = Conv2DTranspose(num_filters,
+                               kernel_size=kernel_size,
+                               strides=strides,
+                               padding='same',
+                               kernel_initializer='he_normal',
+                               kernel_regularizer=l2(1e-4))
 
     x = inputs
     if conv_first:
@@ -119,21 +127,39 @@ def decoder_layer(inputs,
                   activation='relu',
                   instance_norm=True):
 
-    conv = Conv2DTranspose(filters=filters,
-                           kernel_size=kernel_size,
-                           strides=strides,
-                           padding='same')
-
     x = inputs
-    if instance_norm:
-        x = InstanceNormalization()(x)
-    if activation == 'relu':
-        x = Activation(activation)(x)
-    else:
-        x = LeakyReLU(alpha=0.2)(x)
-    x = conv(x)
+    y = resnet_layer(inputs=x,
+                     num_filters=filters,
+                     kernel_size=1,
+                     strides=1,
+                     activation=activation,
+                     normalization=False,
+                     transpose=True,
+                     conv_first=False)
+    y = resnet_layer(inputs=y,
+                     num_filters=filters,
+                     kernel_size=kernel_size,
+                     strides=1,
+                     transpose=True,
+                     conv_first=False)
+    y = resnet_layer(inputs=y,
+                     num_filters=filters,
+                     strides=strides,
+                     kernel_size=1,
+                     normalization=False,
+                     transpose=True,
+                     conv_first=False)
+    x = resnet_layer(inputs=x,
+                     num_filters=filters,
+                     kernel_size=1,
+                     strides=strides,
+                     activation=None,
+                     transpose=True,
+                     normalization=False)
+
+    x = add([x, y])
+
     x = concatenate([x, paired_inputs])
-    # x = Dropout(0.2)(x)
     return x
 
 

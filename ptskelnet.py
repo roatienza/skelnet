@@ -191,12 +191,9 @@ if __name__ == '__main__':
     generator = build_generator(input_shape, output_shape, kernel_size=3)
     generator.summary()
 
-    #discriminator = build_discriminator(input_shape, output_shape)
-    #discriminator.summary()
     if args.plot:
         from keras.utils import plot_model
         plot_model(generator, to_file='generator.png', show_shapes=True)
-        # plot_model(discriminator, to_file='discriminator.png', show_shapes=True)
 
     if args.gen is not None:
         print("Loading generator weights ...", args.gen)

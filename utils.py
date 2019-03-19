@@ -8,7 +8,52 @@ import skimage
 from skimage.io import imread
 from keras.preprocessing.image import ImageDataGenerator
 
-def augment(inputs, outputs, shift=False, ispts=False):
+def rotate(inputs, outputs, ntimes=5):
+    args = dict(rotation_range=360)
+    print("Rotating...")
+    return transform(inputs, outputs, ntimes=ntimes, args=args)
+
+def translate(inputs, outputs, ntimes=5):
+    args = dict(width_shift_range=0.2,
+                height_shift_range=0.2)
+    print("Translating...")
+    return transform(inputs, outputs, ntimes=ntimes, args=args)
+
+def scale(inputs, outputs, ntimes=5):
+    args = dict(zoom_range=[0.8, 1.])
+    print("Scaling...")
+    return transform(inputs, outputs, ntimes=ntimes, args=args)
+
+def transform(inputs, outputs, ntimes=1, args=None):
+    datagen = ImageDataGenerator(**args)
+    input_gen = []
+    output_gen = []
+    for i in range(ntimes):
+        for j in range(len(inputs)):
+            inp = inputs[j]
+            out = outputs[j]
+            trans = datagen.get_random_transform(inp.shape)
+            inp = datagen.apply_transform(inp, trans)
+            out = datagen.apply_transform(out, trans)
+            input_gen.append(inp)
+            output_gen.append(out)
+
+    input_gen = np.array(input_gen)
+    output_gen = np.array(output_gen)
+
+    return input_gen, output_gen
+
+
+def augment(inputs, outputs, ispts=False):
+    x1, y1 = rotate(inputs, outputs)
+    x2, y2 = translate(inputs, outputs)
+    x3, y3 = scale(inputs, outputs)
+    x = np.concatenate((x1, x2, x3), axis=0)
+    y = np.concatenate((y1, y2, y3), axis=0)
+    return x, y
+
+
+def augment_(inputs, outputs, shift=False, ispts=False):
     # we create two instances with the same arguments
     ntimes = 1
     print("input shape: ", inputs.shape)

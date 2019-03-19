@@ -12,7 +12,7 @@ import argparse
 import os
 from model import build_generator, build_discriminator
 from skimage.io import imsave
-from utils import list_files, read_gray
+from utils import list_files, read_gray, augment
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras.optimizers import Adam, RMSprop
@@ -67,54 +67,6 @@ def predict_pix(model, path=PX_PATH, ispt=False):
             out_pix = np.expand_dims(out_pix, axis=2)
             out_pix = np.concatenate((out_pix, out_pix, out_pix), axis=2)
             imsave(path, out_pix)
-
-
-
-def augment(inputs, outputs, shift=False, ispts=False):
-    # we create two instances with the same arguments
-    ntimes = 2
-    print("input shape: ", inputs.shape)
-    print("output shape: ", outputs.shape)
-    if shift:
-        args = dict(width_shift_range=0.1,
-                    height_shift_range=0.1)
-        ntimes = 2
-        print("Augmenting data by shifting...")
-    else:
-        if ispts:
-            args = dict(rotation_range=30,
-                        vertical_flip=True,
-                        zoom_range=[0.8, 1.])
-        else:
-            args = dict(rotation_range=30,
-                        horizontal_flip=True,
-                        zoom_range=[0.8, 1.])
-        print("Augmenting data...")
-
-    datagen = ImageDataGenerator(**args)
-    input_gen = []
-    output_gen = []
-    for i in range(ntimes):
-        for j in range(len(inputs)):
-            inp = inputs[j]
-            out = outputs[j]
-            trans = datagen.get_random_transform(inp.shape)
-            inp = datagen.apply_transform(inp, trans)
-            out = datagen.apply_transform(out, trans)
-            input_gen.append(inp)
-            output_gen.append(out)
-
-    input_gen = np.array(input_gen)
-    output_gen = np.array(output_gen)
-
-    print(input_gen.shape)
-    print(output_gen.shape)
-
-    inputs = np.concatenate((inputs, input_gen), axis=0)
-    outputs = np.concatenate((outputs, output_gen), axis=0)
-    print("Augmented input shape: ", inputs.shape)
-    print("Augmented output shape: ", outputs.shape)
-    return inputs, outputs
 
 
 def train(models, source_data, target_data, batch_size=8):
@@ -244,36 +196,19 @@ if __name__ == '__main__':
     output_pix = np.load(outfile)
 
     print("batch size: ", args.batch_size)
-    #if args.aug:
-    #    x, y = augment(input_pix, output_pix)
-    #    x, y = augment(x, y, shift=True)
-
-    #print("input shape: ", input_pix.shape)
-    #print("output shape: ", output_pix.shape)
-    # input image dimensions.
     input_shape = input_pix.shape[1:]
     output_shape = output_pix.shape[1:]
-
-    # normalize data.
-    #input_pix = input_pix.astype('float32') / 255
-    #output_pix = output_pix.astype('float32') / 255
 
     generator = build_generator(input_shape, output_shape, kernel_size=3)
     generator.summary()
 
-    #discriminator = build_discriminator(input_shape, output_shape)
-    #discriminator.summary()
     if args.plot:
         from keras.utils import plot_model
         plot_model(generator, to_file='generator.png', show_shapes=True)
-        # plot_model(discriminator, to_file='discriminator.png', show_shapes=True)
 
     if args.gen is not None:
         print("Loading generator weights ...", args.gen)
         generator.load_weights(args.gen)
-    if args.dis is not None:
-        print("Loading discriminator weights ...", args.dis)
-        #discriminator.load_weights(args.dis)
 
     if not args.train:
         predict_pix(generator, ispt=True)
@@ -318,13 +253,16 @@ if __name__ == '__main__':
         # train the model with input images and labels
         for i in range(EPOCHS):
             x, y = augment(input_pix, output_pix)
-            x, y = augment(x, y, shift=True)
+            x = np.concatenate((input_pix, x), axis=0)
+            y = np.concatenate((output_pix, y), axis=0)
+            print("Augmented input shape: ", x.shape)
+            print("Augmented output shape: ", y.shape)
             x = x.astype('float32') / 255
             y = y.astype('float32') / 255
             inputs = [x, x, x, x]
             generator.fit(inputs,
                           y,
-                          epochs=1,
+                          epochs=8,
                           batch_size=args.batch_size,
                           callbacks=callbacks)
 
@@ -334,7 +272,8 @@ if __name__ == '__main__':
                           metrics=['accuracy'])
         for i in range(EPOCHS):
             x, y = augment(input_pix, output_pix)
-            x, y = augment(x, y, shift=True)
+            x = np.concatenate((input_pix, x), axis=0)
+            y = np.concatenate((output_pix, y), axis=0)
             x = x.astype('float32') / 255
             y = y.astype('float32') / 255
             inputs = [x, x, x, x]

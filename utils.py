@@ -7,20 +7,24 @@ import math
 import skimage
 from skimage.io import imread
 from keras.preprocessing.image import ImageDataGenerator
+import keras.backend as K
 
-def rotate(inputs, outputs, ntimes=5):
-    args = dict(rotation_range=360)
+def mae_bc(y_true, y_pred):
+    return K.mean(K.abs(y_pred - y_true), axis=-1) + K.mean(K.binary_crossentropy(y_true, y_pred), axis=-1)
+
+def rotate(inputs, outputs, ntimes=8):
+    args = dict(rotation_range=355)
     print("Rotating...")
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 
-def translate(inputs, outputs, ntimes=5):
+def translate(inputs, outputs, ntimes=8):
     args = dict(width_shift_range=0.2,
                 height_shift_range=0.2)
     print("Translating...")
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 
-def scale(inputs, outputs, ntimes=5):
-    args = dict(zoom_range=[0.8, 1.])
+def scale(inputs, outputs, ntimes=8):
+    args = dict(zoom_range=[0.65, 0.95])
     print("Scaling...")
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 

@@ -12,7 +12,7 @@ import argparse
 import os
 from model import build_generator, build_discriminator
 from skimage.io import imsave
-from utils import list_files, read_gray, augment
+from utils import list_files, read_gray, augment, mae_bc
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras.optimizers import Adam, RMSprop
@@ -26,7 +26,7 @@ from other_utils import test_generator, display_images
 PT_PATH = "dataset/pixel/train"
 PX_PATH = "dataset/pixel/test"
 PR_PATH = "dataset/pixel/root"
-EPOCHS = 200
+EPOCHS = 100
 
 def predict_pix(model, path=PX_PATH, ispt=False):
     if ispt:
@@ -145,12 +145,8 @@ def train(models, source_data, target_data, batch_size=8):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 160:
-        lr = 0.5e-4
-    elif epoch > 120:
+    if epoch > 40:
         lr = 1e-4
-    elif epoch > 80:
-        lr = 0.5e-3
     print('Learning rate: ', lr)
     return lr
 
@@ -251,7 +247,7 @@ if __name__ == '__main__':
         callbacks = [checkpoint, lr_scheduler]
 
         # train the model with input images and labels
-        for i in range(EPOCHS):
+        for i in range(4):
             x, y = augment(input_pix, output_pix)
             x = np.concatenate((input_pix, x), axis=0)
             y = np.concatenate((output_pix, y), axis=0)
@@ -262,24 +258,7 @@ if __name__ == '__main__':
             inputs = [x, x, x, x]
             generator.fit(inputs,
                           y,
-                          epochs=8,
-                          batch_size=args.batch_size,
-                          callbacks=callbacks)
-
-        optimizer = Adam(lr=1e-4)
-        generator.compile(loss='binary_crossentropy',
-                          optimizer=optimizer,
-                          metrics=['accuracy'])
-        for i in range(EPOCHS):
-            x, y = augment(input_pix, output_pix)
-            x = np.concatenate((input_pix, x), axis=0)
-            y = np.concatenate((output_pix, y), axis=0)
-            x = x.astype('float32') / 255
-            y = y.astype('float32') / 255
-            inputs = [x, x, x, x]
-            generator.fit(inputs,
-                          y,
-                          epochs=1,
+                          epochs=60,
                           batch_size=args.batch_size,
                           callbacks=callbacks)
 

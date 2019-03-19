@@ -157,10 +157,6 @@ if __name__ == '__main__':
     parser.add_argument("--gen",
                         default=None,
                         help=help_)
-    help_ = "Dis weights"
-    parser.add_argument("--dis",
-                        default=None,
-                        help=help_)
     help_ = "Train"
     parser.add_argument("--train",
                         default=False,
@@ -176,16 +172,28 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true',
                         help=help_)
+    help_ = "Pix"
+    parser.add_argument("--pix",
+                        default=False,
+                        action='store_true',
+                        help=help_)
     help_ = "Batch size"
     parser.add_argument("--batch_size", type=int, default=8, help=help_)
+
+    help_ = "ntimes"
+    parser.add_argument("--ntimes", type=int, default=8, help=help_)
 
     help_ = "Number of GPUs (default is 1)"
     parser.add_argument("--gpus", type=int, default=1, help=help_)
 
     args = parser.parse_args()
 
-    infile = "in_pts.npy"
-    outfile = "out_pts.npy"
+    if args.pix:
+        infile = "in_pix.npy"
+        outfile = "out_pix.npy"
+    else:
+        infile = "in_pts.npy"
+        outfile = "out_pts.npy"
     print("Loading ... ", infile) 
     input_pix = np.load(infile)
     print("Loading ... ", outfile) 
@@ -248,7 +256,7 @@ if __name__ == '__main__':
 
         # train the model with input images and labels
         for i in range(4):
-            x, y = augment(input_pix, output_pix)
+            x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
             x = np.concatenate((input_pix, x), axis=0)
             y = np.concatenate((output_pix, y), axis=0)
             print("Augmented input shape: ", x.shape)

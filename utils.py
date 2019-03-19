@@ -28,7 +28,7 @@ def scale(inputs, outputs, ntimes=8):
     print("Scaling...")
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 
-def transform(inputs, outputs, ntimes=1, args=None):
+def transform(inputs, outputs, ntimes=8, args=None):
     datagen = ImageDataGenerator(**args)
     input_gen = []
     output_gen = []
@@ -48,10 +48,10 @@ def transform(inputs, outputs, ntimes=1, args=None):
     return input_gen, output_gen
 
 
-def augment(inputs, outputs, ispts=False):
-    x1, y1 = rotate(inputs, outputs)
-    x2, y2 = translate(inputs, outputs)
-    x3, y3 = scale(inputs, outputs)
+def augment(inputs, outputs, ispts=False, ntimes=8):
+    x1, y1 = rotate(inputs, outputs, ntimes=ntimes)
+    x2, y2 = translate(inputs, outputs, ntimes=ntimes)
+    x3, y3 = scale(inputs, outputs, ntimes=ntimes)
     x = np.concatenate((x1, x2, x3), axis=0)
     y = np.concatenate((y1, y2, y3), axis=0)
     return x, y

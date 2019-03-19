@@ -245,7 +245,10 @@ if __name__ == '__main__':
 
         # prepare model model saving directory.
         save_dir = os.path.join(os.getcwd(), 'weights')
-        model_name = 'skelnet_pix_model.h5' 
+        if args.pix:
+            model_name = 'skelnet_pix_model.h5' 
+        else:
+            model_name = 'skelnet_pts_model.h5' 
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
         filepath = os.path.join(save_dir, model_name)

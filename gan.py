@@ -215,7 +215,10 @@ if __name__ == '__main__':
         generator.load_weights(args.gen)
 
     if not args.train:
-        predict_pix(generator, ispt=True)
+        if args.pix:
+            predict_pix(generator, ispt=False)
+        else:
+            predict_pix(generator, ispt=True)
     else:
         #optimizer = RMSprop(lr=2e-4)
         #discriminator.compile(loss='mse', optimizer=optimizer)

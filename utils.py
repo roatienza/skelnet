@@ -21,13 +21,13 @@ def translate(inputs, outputs, ntimes=8):
     args = dict(width_shift_range=0.2,
                 height_shift_range=0.2)
     print("Translating...")
-    return transform(inputs, outputs, ntimes=ntimes//4, args=args)
+    return transform(inputs, outputs, ntimes=2, args=args)
 
 def flip(inputs, outputs, ntimes=8):
     args = dict(vertical_flip=True,
                 horizontal_flip=True)
     print("Flipping...")
-    return transform(inputs, outputs, ntimes=ntimes//4, args=args)
+    return transform(inputs, outputs, ntimes=2, args=args)
 
 def scale(inputs, outputs, ntimes=8):
     args = dict(zoom_range=[0.5, 0.9])

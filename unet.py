@@ -90,8 +90,8 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true',
                         help=help_)
-    help_ = "Augmenr"
-    parser.add_argument("--aug",
+    help_ = "Skip connection"
+    parser.add_argument("--skip",
                         default=False,
                         action='store_true',
                         help=help_)
@@ -126,7 +126,11 @@ if __name__ == '__main__':
     input_shape = input_pix.shape[1:]
     output_shape = output_pix.shape[1:]
 
-    unet = build_generator(input_shape, output_shape, kernel_size=3)
+    if args.skip:
+        print("Building PSP UNet with skip connection")
+    else:
+        print("Building PSP UNet")
+    unet = build_generator(input_shape, output_shape, kernel_size=3, skip=args.skip)
     unet.summary()
 
     if args.plot:
@@ -152,8 +156,13 @@ if __name__ == '__main__':
         save_dir = os.path.join(os.getcwd(), 'weights')
         if args.pix:
             model_name = 'skelnet_pix_unet_model.h5' 
+            if args.skip:
+                model_name = 'skelnet_pix_unet_skip_model.h5' 
         else:
             model_name = 'skelnet_pts_unet_model.h5' 
+            if args.skip:
+                model_name = 'skelnet_pts_unet_skip_model.h5' 
+
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
         filepath = os.path.join(save_dir, model_name)
@@ -167,7 +176,7 @@ if __name__ == '__main__':
 
         # train the model with input images and labels
         xval = input_pix.astype('float32') / 255
-        xval = [xval, xval, xval, xval]
+        xval = [xval, xval, xval]
         yval = output_pix.astype('float32') / 255
         for i in range(4):
             x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
@@ -177,7 +186,7 @@ if __name__ == '__main__':
             print("Augmented output shape: ", y.shape)
             x = x.astype('float32') / 255
             y = y.astype('float32') / 255
-            inputs = [x, x, x, x]
+            inputs = [x, x, x]
             unet.fit(inputs,
                      y,
                      validation_data=(xval, yval),
@@ -188,4 +197,3 @@ if __name__ == '__main__':
             y = None
             del x
             del y
-

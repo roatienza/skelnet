@@ -27,7 +27,8 @@ def encoder_layer(inputs,
                   kernel_size=3,
                   strides=2,
                   activation='relu',
-                  instance_norm=True):
+                  instance_norm=True,
+                  skip=True):
 
     conv = Conv2D(filters=filters,
                   kernel_size=kernel_size,
@@ -48,13 +49,14 @@ def encoder_layer(inputs,
                activation='relu',
                padding='same',
                kernel_initializer='he_normal')(x)
-    y = Conv2D(filters=64,
-               kernel_size=1,
-               strides=strides,
-               activation='relu',
-               padding='same',
-               kernel_initializer='he_normal')(inputs)
-    x = concatenate([x, y])
+    if skip:
+        y = Conv2D(filters=64,
+                   kernel_size=1,
+                   strides=strides,
+                   activation='relu',
+                   padding='same',
+                   kernel_initializer='he_normal')(inputs)
+        x = concatenate([x, y])
     return x
 
 
@@ -64,7 +66,8 @@ def decoder_layer(inputs,
                   kernel_size=3,
                   strides=2,
                   activation='relu',
-                  instance_norm=True):
+                  instance_norm=True,
+                  skip=True):
 
     conv = Conv2DTranspose(filters=filters,
                            kernel_size=kernel_size,
@@ -86,70 +89,60 @@ def decoder_layer(inputs,
                         activation='relu',
                         padding='same',
                         kernel_initializer='he_normal')(x)
-    y = Conv2DTranspose(filters=64,
-                        kernel_size=1,
-                        activation='relu',
-                        strides=strides,
-                        padding='same',
-                        kernel_initializer='he_normal')(inputs)
-    x = concatenate([x, y])
-    # x = Dropout(0.2)(x)
+    if skip:
+        y = Conv2DTranspose(filters=64,
+                            kernel_size=1,
+                            activation='relu',
+                            strides=strides,
+                            padding='same',
+                            kernel_initializer='he_normal')(inputs)
+        x = concatenate([x, y])
     return x
 
-def compression_layer(x, transpose=False):
-    if transpose:
-        conv = Conv2DTranpose
-    else:
-        conv = Conv2D
-    y = conv(filters=64,
-             kernel_size=1,
-             activation='relu',
-             padding='same',
-             kernel_initializer='he_normal')(x)
-    return y
 
 def build_generator(input_shape,
                     output_shape=None,
                     kernel_size=3,
-                    name=None):
+                    name=None,
+                    skip=True):
 
-    inputs0 = Input(shape=input_shape)
     channels = int(output_shape[-1])
-    #x = InstanceNormalization()(inputs)
-    #x = Activation('relu')(x)
-    o0 = Conv2DTranspose(channels,
-                         kernel_size=1,
-                         strides=1,
-                         padding='same')(inputs0)
 
     inputs1 = Input(shape=input_shape)
     e11 = encoder_layer(inputs1,
                         32,
                         strides=1,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 256x256 x 32
     e12 = encoder_layer(e11,
                         64,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 128x128 x 64
     e13 = encoder_layer(e12,
                         128,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 64x64 x 128
     e14 = encoder_layer(e13,
                         256,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 32x32 x 256
     e15 = encoder_layer(e14,
                         512,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 16x16 x 512
     e16 = encoder_layer(e15,
                         1024,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 8x8 x 1024
     e17 = encoder_layer(e16,
                         2048,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 4x4 x 2048
 
@@ -157,36 +150,40 @@ def build_generator(input_shape,
     d11 = decoder_layer(e17,
                         e16,
                         1024,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 8x8 x 1024+1024 
     d12 = decoder_layer(d11,
                         e15,
                         512,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 16x16 x 512+512
     d13 = decoder_layer(d12,
                         e14,
                         256,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 32x32 x 256+256
     d14 = decoder_layer(d13,
                         e13,
                         128,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 64x64 x 128+128
     d15 = decoder_layer(d14,
                         e12,
                         64,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 128x128 x 64+64
     d16 = decoder_layer(d15,
                         e11,
                         32,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 256x256 x 32+32
 
-    #o1 = InstanceNormalization()(d15)
-    #o1 = Activation('relu')(o1)
     o1 = Conv2DTranspose(channels,
                          kernel_size=1,
                          strides=1,
@@ -198,21 +195,25 @@ def build_generator(input_shape,
     e21 = encoder_layer(inputs2,
                         32,
                         strides=1,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 256x256 x 32
     e22 = encoder_layer(e21,
                         64,
                         strides=4,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 64x64 x 64
     e23 = encoder_layer(e22,
                         128,
                         strides=4,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 16x16 x 128
     e24 = encoder_layer(e23,
                         256,
                         strides=4,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 4x4 x 256
 
@@ -220,22 +221,23 @@ def build_generator(input_shape,
                         e23,
                         128,
                         strides=4,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 16x16 x 128+128
     d22 = decoder_layer(d21,
                         e22,
                         64,
                         strides=4,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 64x64 x 64+64
     d23 = decoder_layer(d22,
                         e21,
                         32,
                         strides=4,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 256x256 x 32+328
-    # o2 = InstanceNormalization()(d22)
-    # o2 = Activation('relu')(o2)
     o2 = Conv2DTranspose(channels,
                          kernel_size=1,
                          strides=1,
@@ -246,16 +248,19 @@ def build_generator(input_shape,
     e31 = encoder_layer(inputs3,
                         32,
                         strides=1,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 256x256 x 32
     e32 = encoder_layer(e31,
                         64,
                         strides=8,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 32x32 x 64
     e33 = encoder_layer(e32,
                         128,
                         strides=8,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 4x4 x 128 
 
@@ -263,30 +268,26 @@ def build_generator(input_shape,
                         e32,
                         64,
                         strides=8,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 32x32 x 64+64 
     d32 = decoder_layer(d31,
                         e31,
                         128,
                         strides=8,
+                        skip=skip,
                         kernel_size=kernel_size)
     # 256x256 x 128+128
-    # o3 = InstanceNormalization()(d31)
-    # o3 = Activation('relu')(o3)
     o3 = Conv2DTranspose(channels,
                          kernel_size=1,
                          strides=1,
                          padding='same')(d32)
 
     y = concatenate([o1, o2, o3])
-    #y = InstanceNormalization()(y)
-    #y = Activation('relu')(y)
     y = Conv2DTranspose(32,
                         kernel_size=1,
                         strides=1,
                         padding='same')(y)
-    #y = InstanceNormalization()(y)
-    #y = Activation('relu')(y)
     y = Conv2DTranspose(channels,
                         kernel_size=kernel_size,
                         strides=1,
@@ -294,7 +295,7 @@ def build_generator(input_shape,
                         padding='same')(y)
     outputs = y
 
-    generator = Model([inputs0, inputs1, inputs2, inputs3], outputs, name=name)
+    generator = Model([inputs1, inputs2, inputs3], outputs, name=name)
 
     return generator
 

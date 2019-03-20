@@ -48,7 +48,7 @@ def predict_pix(model, path=PX_PATH, ispt=False):
     for i in range(input_pix.shape[0]):
         pix = input_pix[i]
         pix = np.expand_dims(pix, axis=0)
-        out_pix = unet.predict([pix, pix, pix, pix])
+        out_pix = unet.predict([pix, pix, pix])
         print("Max: ", np.amax(pix))
         out_pix[out_pix>=0.2] = 1.0
         out_pix[out_pix<0.1] = 0.0

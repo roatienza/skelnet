@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
     if args.weights is not None:
         print("Loading unet weights ...", args.weights)
-        unet.load_weights(args.gen)
+        unet.load_weights(args.weights)
 
     if not args.train:
         if args.pix:

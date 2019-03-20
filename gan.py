@@ -261,6 +261,9 @@ if __name__ == '__main__':
         callbacks = [checkpoint, lr_scheduler]
 
         # train the model with input images and labels
+        xval = input_pix.astype('float32') / 255
+        xval = [xval, xval, xval]
+        yval = output_pix.astype('float32') / 255
         for i in range(4):
             x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
             x = np.concatenate((input_pix, x), axis=0)
@@ -269,10 +272,15 @@ if __name__ == '__main__':
             print("Augmented output shape: ", y.shape)
             x = x.astype('float32') / 255
             y = y.astype('float32') / 255
-            inputs = [x, x, x, x]
+            inputs = [x, x, x]
             generator.fit(inputs,
                           y,
                           epochs=60,
+                          validation_data=(xval, yval),
                           batch_size=args.batch_size,
                           callbacks=callbacks)
 
+            x = None
+            y = None
+            del x
+            del y

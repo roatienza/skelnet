@@ -262,7 +262,7 @@ if __name__ == '__main__':
 
         # train the model with input images and labels
         xval = input_pix.astype('float32') / 255
-        xval = [xval, xval, xval]
+        xval = [xval, xval, xval, xval]
         yval = output_pix.astype('float32') / 255
         for i in range(4):
             x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
@@ -272,7 +272,7 @@ if __name__ == '__main__':
             print("Augmented output shape: ", y.shape)
             x = x.astype('float32') / 255
             y = y.astype('float32') / 255
-            inputs = [x, x, x]
+            inputs = [x, x, x, x]
             generator.fit(inputs,
                           y,
                           epochs=60,

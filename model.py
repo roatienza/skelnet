@@ -42,7 +42,7 @@ def encoder_layer(inputs,
     else:
         x = LeakyReLU(alpha=0.2)(x)
     x = conv(x)
-    x = Dropout(0.2)(x)
+    # x = Dropout(0.2)(x)
     return x
 
 
@@ -68,7 +68,7 @@ def decoder_layer(inputs,
         x = LeakyReLU(alpha=0.2)(x)
     x = conv(x)
     x = concatenate([x, paired_inputs])
-    x = Dropout(0.2)(x)
+    # x = Dropout(0.2)(x)
     return x
 
 
@@ -79,6 +79,7 @@ def build_generator(input_shape,
 
     channels = int(output_shape[-1])
 
+    inputs0 = Input(shape=input_shape)
     inputs1 = Input(shape=input_shape)
     e11 = encoder_layer(inputs1,
                         32,
@@ -251,7 +252,7 @@ def build_generator(input_shape,
                         padding='same')(y)
     outputs = y
 
-    generator = Model([inputs1, inputs2, inputs3], outputs, name=name)
+    generator = Model([inputs0, inputs1, inputs2, inputs3], outputs, name=name)
 
     return generator
 

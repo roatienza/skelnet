@@ -10,7 +10,7 @@ from __future__ import print_function
 import numpy as np
 import argparse
 import os
-from bezier_model import build_generator, build_discriminator
+from bezier_model import build_model, build_generator, build_discriminator
 from skimage.io import imsave
 from utils import list_files, read_gray, augment, mae_bc
 from keras.preprocessing.image import ImageDataGenerator
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     input_shape = input_pix.shape[1:]
     output_shape = output_pix.shape[1:]
 
-    generator = build_generator(input_shape, output_shape, kernel_size=3)
+    generator = build_model(input_shape, output_shape)
     generator.summary()
 
     if args.plot:
@@ -95,9 +95,9 @@ if __name__ == '__main__':
         else:
             predict_pix(generator, ispt=True)
     else:
-        optimizer = Adam(lr=1e-3)
-        loss = ['mse', 'mse', 'mse', 'binary_crossentropy']
-        generator.compile(loss=loss,
+        optimizer = Adam(lr=1e-4)
+        loss = ['mse', 'mse', 'mse', 'mse']
+        generator.compile(loss='mse',
                           optimizer=optimizer,
                           metrics=['accuracy'])
 
@@ -117,14 +117,7 @@ if __name__ == '__main__':
 
         # train the model with input images and labels
         xval = input_pix.astype('float32') / 255
-        x = xval
-        xval = [xval, xval, xval]
-        yval1 = output_pix[:,:,0]
-        print(yval1.shape)
-        yval2 = output_pix[:,:,1]
-        yval3 = output_pix[:,:,2]
-        yval4 = output_pix[:,:,3]
-        yval = [yval1, yval2, yval3, yval4]
+        yval = output_pix
         # yval = output_pix.astype('float32') / 255
         # x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
         #x = np.concatenate((input_pix, x), axis=0)
@@ -133,7 +126,7 @@ if __name__ == '__main__':
         #print("Augmented output shape: ", y.shape)
         #x = x.astype('float32') / 255
         #y = y.astype('float32') / 255
-        inputs = [x, x, x]
+        inputs = xval
         outputs = yval
         generator.fit(inputs,
                       outputs,

@@ -9,17 +9,44 @@ from __future__ import print_function
 from keras.layers import Activation, Dense, Input
 from keras.layers import Conv2D, Flatten
 from keras.layers import Conv2DTranspose, Dropout
-from keras.layers import BatchNormalization
-from keras.layers import LeakyReLU
+from keras.layers import BatchNormalization, GlobalAveragePooling2D
+from keras.layers import LeakyReLU, Reshape
 from keras.models import Model
 from keras.models import load_model
 from keras.layers.merge import concatenate
 from keras.utils import plot_model
+from keras.applications.densenet import DenseNet121
 
 from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
 
 import numpy as np
 import argparse
+
+
+def build_model(input_shape, output_shape=None):
+    base_model = DenseNet121(weights='imagenet', include_top=False)
+    inputs = Input(shape=input_shape)
+    conv = Conv2D(filters=3,
+                  kernel_size=3,
+                  padding='same')
+    x = conv(inputs)
+    tail = Model(inputs, x)
+    y = base_model.output
+    y = GlobalAveragePooling2D()(y)
+    y = Dense(630*4, activation='relu')(y)
+    y = Reshape((630, 4))(y)
+    y = Activation('tanh')(y)
+
+    # this is the model we will train
+    model = Model(inputs=base_model.input, outputs=y)
+    g = Model(inputs, model(tail(inputs)))
+
+    # first: train only the top layers (which were randomly initialized)
+    # i.e. freeze all convolutional InceptionV3 layers
+    for layer in base_model.layers:
+            layer.trainable = False
+
+    return g
 
 
 def encoder_layer(inputs,

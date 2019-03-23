@@ -87,6 +87,7 @@ def get_out_pix(filename="out_bez.npy"):
             max_pt = pix_data.shape[0]
         pix_data = np.append(pix_data, ones, axis=-1)
         pad = np.zeros((630, 4))
+        pad[:,-1] = -1.0
         pad[:pix_data.shape[0], :pix_data.shape[1]] = pix_data
         print(pad)
         print(pad.shape)
@@ -131,5 +132,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
 
-    # pix = get_in_pix()
+    #pix = get_in_pix()
     pix = get_out_pix()

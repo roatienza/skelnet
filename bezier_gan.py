@@ -24,6 +24,42 @@ from other_utils import test_generator, display_images
 
 
 EPOCHS = 100
+PX_PATH = "dataset/bezier/test"
+PR_PATH = "dataset/bezier/root"
+
+
+def predict_pix(model, path=PX_PATH):
+    files = list_files(path)
+    pix = []
+    for f in files:
+        pix_file = os.path.join(path, f)
+        pix_data =  read_gray(pix_file)
+        print(pix_file)
+        pix.append(pix_data)
+
+    pix = np.array(pix)
+    print("Shape: ", pix.shape)
+    input_pix = np.expand_dims(pix, axis=3)
+    input_pix = input_pix / 255.0
+    print("Final shape: ", pix.shape)
+
+    for i in range(input_pix.shape[0]):
+        pix = input_pix[i]
+        pix = np.expand_dims(pix, axis=0)
+        pred = model.predict(pix)
+        print("Min: ", np.amin(pred))
+        print("Max: ", np.amax(pred))
+
+        pred = np.squeeze(pred)
+        print(pred)
+        print(pred.shape)
+        filename = files[i]
+        filename = filename.replace("png", ".csv")
+        filename = "bzskeleton_skelpoints_" + filename
+        path = os.path.join(PR_PATH, filename)
+        print(path)
+        
+
 
 def lr_schedule(epoch):
     lr = 1e-3
@@ -90,13 +126,11 @@ if __name__ == '__main__':
         generator.load_weights(args.gen)
 
     if not args.train:
-        if args.pix:
-            predict_pix(generator, ispt=False)
-        else:
-            predict_pix(generator, ispt=True)
+        print("Min: ", np.amin(output_pix))
+        print("Max: ", np.amax(output_pix))
+        predict_pix(generator)
     else:
         optimizer = Adam(lr=1e-4)
-        loss = ['mse', 'mse', 'mse', 'mse']
         generator.compile(loss='mse',
                           optimizer=optimizer,
                           metrics=['accuracy'])

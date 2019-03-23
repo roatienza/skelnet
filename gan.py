@@ -26,7 +26,7 @@ from other_utils import test_generator, display_images
 PT_PATH = "dataset/pixel/train"
 PX_PATH = "dataset/pixel/test"
 PR_PATH = "dataset/pixel/root"
-EPOCHS = 100
+EPOCHS = 140
 
 def predict_pix(model, path=PX_PATH, ispt=False):
     if ispt:
@@ -145,7 +145,9 @@ def train(models, source_data, target_data, batch_size=8):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 40:
+    if epoch > 100:
+        lr = 1e-5
+    elif epoch > 60:
         lr = 1e-4
     print('Learning rate: ', lr)
     return lr
@@ -275,7 +277,7 @@ if __name__ == '__main__':
             inputs = [x, x, x, x]
             generator.fit(inputs,
                           y,
-                          epochs=60,
+                          epochs=140,
                           validation_data=(xval, yval),
                           batch_size=args.batch_size,
                           callbacks=callbacks)

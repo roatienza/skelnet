@@ -41,7 +41,10 @@ def predict_pix(model, path=PX_PATH):
     print("Shape: ", pix.shape)
     input_pix = np.expand_dims(pix, axis=3)
     input_pix = input_pix / 255.0
+    print(input_pix[0])
     print("Final shape: ", pix.shape)
+    print("Max: ", np.amax(input_pix))
+    return
 
     for i in range(input_pix.shape[0]):
         pix = input_pix[i]
@@ -64,7 +67,7 @@ def predict_pix(model, path=PX_PATH):
 def lr_schedule(epoch):
     lr = 1e-3
     if epoch > 40:
-        lr = 1e-4
+        lr *= 1e-1 
     print('Learning rate: ', lr)
     return lr
 
@@ -130,7 +133,7 @@ if __name__ == '__main__':
         print("Max: ", np.amax(output_pix))
         predict_pix(generator)
     else:
-        optimizer = Adam(lr=1e-4)
+        optimizer = Adam(lr=1e-3)
         generator.compile(loss='mse',
                           optimizer=optimizer,
                           metrics=['accuracy'])

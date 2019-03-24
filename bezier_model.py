@@ -26,16 +26,16 @@ import argparse
 def build_model(input_shape, output_shape=None):
     base_model = DenseNet121(weights='imagenet', include_top=False)
     inputs = Input(shape=input_shape)
-    conv = Conv2D(filters=3,
-                  kernel_size=3,
-                  padding='same')
-    x = conv(inputs)
+    #conv = Conv2D(filters=3,
+    #              kernel_size=1,
+    #              padding='same')
+    x = concatenate([inputs, inputs, inputs], axis=-1)
     tail = Model(inputs, x)
     y = base_model.output
     y = GlobalAveragePooling2D()(y)
-    y = Dense(630*4, activation='relu')(y)
+    y = Dense(1024, activation='relu')(y)
+    y = Dense(630*4, activation='tanh')(y)
     y = Reshape((630, 4))(y)
-    y = Activation('tanh')(y)
 
     # this is the model we will train
     model = Model(inputs=base_model.input, outputs=y)

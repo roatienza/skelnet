@@ -36,6 +36,7 @@ def build_model(input_shape, output_shape=None):
 
     # this is the model we will train
     model = Model(inputs=base_model.input, outputs=y)
+    model.summary()
     g = Model(inputs, model(tail(inputs)))
 
     # first: train only the top layers (which were randomly initialized)

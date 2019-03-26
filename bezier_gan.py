@@ -133,6 +133,7 @@ if __name__ == '__main__':
 
     generator = build_model(input_shape, output_shape)
     generator.summary()
+    exit(0)
 
     if args.plot:
         from keras.utils import plot_model

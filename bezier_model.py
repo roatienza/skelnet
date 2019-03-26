@@ -26,9 +26,6 @@ import argparse
 def build_model(input_shape, output_shape=None):
     base_model = DenseNet121(weights='imagenet', include_top=False)
     inputs = Input(shape=input_shape)
-    #conv = Conv2D(filters=3,
-    #              kernel_size=1,
-    #              padding='same')
     x = concatenate([inputs, inputs, inputs], axis=-1)
     tail = Model(inputs, x)
     y = base_model.output

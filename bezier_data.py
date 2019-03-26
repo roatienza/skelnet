@@ -69,7 +69,7 @@ def get_in_pix(filename="in_bez.npy", ispix=True, istest=False):
 #Saving to  out_bez.npy
 
 
-def get_out_pix(filename="out_bez.npy"):
+def get_out_pix_mat(filename="out_bez.npy"):
     files = list_files(MAT_PATH)
     pix = []
     max_pt = 0
@@ -89,6 +89,74 @@ def get_out_pix(filename="out_bez.npy"):
         pad = np.zeros((630, 4))
         pad[:,-1] = -1.0
         pad[:pix_data.shape[0], :pix_data.shape[1]] = pix_data
+        print(pad)
+        print(pad.shape)
+        pix.append(pad)
+
+
+    pix = np.array(pix)
+    print(pix.shape)
+    print("Max params: ", max_pt)
+    print("Min 0: ", np.amin(pix[:,:,0]))
+    print("Max 0: ", np.amax(pix[:,:,0]))
+    print("Min 1: ", np.amin(pix[:,:,1]))
+    print("Max 1: ", np.amax(pix[:,:,1]))
+    print("Min 2: ", np.amin(pix[:,:,2]))
+    print("Max 2: ", np.amax(pix[:,:,2]))
+    print("Min 3: ", np.amin(pix[:,:,3]))
+    print("Max 3: ", np.amax(pix[:,:,3]))
+    print("--------------")
+    c = ceil(max(abs(np.amin(pix[:,:,0])),np.amax(pix[:,:,0])))
+    pix[:,:,0] /= c
+    print("ceil 0:", c)
+    c = ceil(max(abs(np.amin(pix[:,:,1])),np.amax(pix[:,:,1])))
+    pix[:,:,1] /= c
+    print("ceil 1:", c)
+    c = ceil(max(abs(np.amin(pix[:,:,2])),np.amax(pix[:,:,2])))
+    pix[:,:,2] /= c
+    print("ceil 2:", c)
+    print("Min 0: ", np.amin(pix[:,:,0]))
+    print("Max 0: ", np.amax(pix[:,:,0]))
+    print("Min 1: ", np.amin(pix[:,:,1]))
+    print("Max 1: ", np.amax(pix[:,:,1]))
+    print("Min 2: ", np.amin(pix[:,:,2]))
+    print("Max 2: ", np.amax(pix[:,:,2]))
+    print("Min 3: ", np.amin(pix[:,:,3]))
+    print("Max 3: ", np.amax(pix[:,:,3]))
+    print("Saving to ", filename) 
+    np.save(filename, pix)
+    return pix
+
+
+def read_csv(path):
+    data = []
+    with open(path, "r") as fh:
+        lines = fh.readlines()
+        for l in lines:
+            l = l.strip()
+            l = l.split(",")
+            d = [float(l[0]), float(l[1]), float(l[2])]
+            data.append(d)
+    return np.array(data)
+
+def get_out_pix(filename="out_bez.npy"):
+    files = list_files(CSV_PATH)
+    pix = []
+    max_pt = 0
+    for f in files:
+        filename = os.path.join(CSV_PATH, f)
+        print(filename)
+        data = read_csv(filename)
+        print(data)
+        print(data.shape)
+        ones = np.ones((data.shape[0],1))
+        print(data.shape)
+        if data.shape[0] > max_pt:
+            max_pt = data.shape[0]
+        data = np.append(data, ones, axis=-1)
+        pad = np.zeros((630, 4))
+        pad[:,-1] = -1.0
+        pad[:data.shape[0], :data.shape[1]] = data
         print(pad)
         print(pad.shape)
         pix.append(pad)

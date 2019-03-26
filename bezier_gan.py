@@ -27,6 +27,9 @@ EPOCHS = 100
 PX_PATH = "dataset/bezier/test"
 PR_PATH = "dataset/bezier/root"
 
+#ceil 0: 766
+#ceil 1: 593
+#ceil 2: 175
 
 def predict_pix(model, path=PX_PATH):
     files = list_files(path)
@@ -43,25 +46,36 @@ def predict_pix(model, path=PX_PATH):
     input_pix = input_pix / 255.0
     print(input_pix[0])
     print("Final shape: ", pix.shape)
-    print("Max: ", np.amax(input_pix))
-    return
 
     for i in range(input_pix.shape[0]):
         pix = input_pix[i]
         pix = np.expand_dims(pix, axis=0)
         pred = model.predict(pix)
-        print("Min: ", np.amin(pred))
-        print("Max: ", np.amax(pred))
-
+        #print("Min: ", np.amin(pred))
+        #print("Max: ", np.amax(pred))
         pred = np.squeeze(pred)
-        print(pred)
         print(pred.shape)
+        c = 766.
+        pred[:,0] *= c
+        c = 593.
+        pred[:,1] *= c
+        c = 175.
+        pred[:,2] *= c
+        #print(pred)
+        #print(pred.shape)
         filename = files[i]
-        filename = filename.replace("png", ".csv")
+        filename = filename.replace("png", "csv")
         filename = "bzskeleton_skelpoints_" + filename
-        path = os.path.join(PR_PATH, filename)
-        print(path)
-        
+        filename = os.path.join(PR_PATH, filename)
+        print(filename)
+        fh = open(filename, "w")
+        for j in range(pred.shape[0]):
+            if pred[j][-1] > 0.:
+                s = str(pred[j][0]) + ","
+                s += str(pred[j][1]) + "," 
+                s += str(pred[j][2]) + "\n" 
+                fh.write(s)
+        fh.close()
 
 
 def lr_schedule(epoch):

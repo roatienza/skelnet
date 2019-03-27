@@ -24,8 +24,7 @@ def translate(inputs, outputs, ntimes=8):
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 
 def flip(inputs, outputs, ntimes=8):
-    args = dict(vertical_flip=True,
-                horizontal_flip=True)
+    args = dict(horizontal_flip=True)
     print("Flipping...")
     return transform(inputs, outputs, ntimes=2, args=args)
 

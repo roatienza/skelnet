@@ -16,11 +16,108 @@ from keras.models import load_model
 from keras.layers.merge import concatenate
 from keras.utils import plot_model
 from keras.applications.densenet import DenseNet121
+from keras.regularizers import l2
+from keras.layers.merge import add
 
 from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
 
 import numpy as np
 import argparse
+
+
+def resnet_layer(inputs,
+                 num_filters=16,
+                 kernel_size=3,
+                 strides=1,
+                 activation='relu',
+                 normalization=True,
+                 conv_first=True,
+                 transpose=False):
+    """2D Convolution-Batch Normalization-Activation stack builder
+
+    # Arguments
+        inputs (tensor): input tensor from input image or previous layer
+        num_filters (int): Conv2D number of filters
+        kernel_size (int): Conv2D square kernel dimensions
+        strides (int): Conv2D square stride dimensions
+        activation (string): activation name
+        normalization (bool): whether to include batch normalization
+        conv_first (bool): conv-bn-activation (True) or
+            bn-activation-conv (False)
+
+    # Returns
+        x (tensor): tensor as input to the next layer
+    """
+    conv = Conv2D(num_filters,
+                  kernel_size=kernel_size,
+                  strides=strides,
+                  padding='same',
+                  kernel_initializer='he_normal',
+                  kernel_regularizer=l2(1e-4))
+    if transpose:
+        conv = Conv2DTranspose(num_filters,
+                               kernel_size=kernel_size,
+                               strides=strides,
+                               padding='same',
+                               kernel_initializer='he_normal',
+                               kernel_regularizer=l2(1e-4))
+
+    x = inputs
+    if conv_first:
+        x = conv(x)
+        if normalization:
+            x = InstanceNormalization()(x)
+        if activation is not None:
+            x = Activation(activation)(x)
+    else:
+        if normalization:
+            x = InstanceNormalization()(x)
+        if activation is not None:
+            x = Activation(activation)(x)
+        x = conv(x)
+    return x
+
+def encoder_layer(inputs,
+                  filters=16,
+                  kernel_size=3,
+                  strides=2,
+                  activation='relu',
+                  instance_norm=True):
+
+    conv = Conv2D(filters=filters,
+                  kernel_size=kernel_size,
+                  strides=strides,
+                  padding='same')
+
+    # bottleneck residual unit
+    x = inputs
+    y = resnet_layer(inputs=x,
+                     num_filters=filters,
+                     kernel_size=1,
+                     strides=1,
+                     activation=activation,
+                     normalization=False,
+                     conv_first=False)
+    y = resnet_layer(inputs=y,
+                     num_filters=filters,
+                     kernel_size=kernel_size,
+                     strides=1,
+                     conv_first=False)
+    y = resnet_layer(inputs=y,
+                     num_filters=filters,
+                     strides=strides,
+                     kernel_size=1,
+                     normalization=False,
+                     conv_first=False)
+    x = resnet_layer(inputs=x,
+                     num_filters=filters,
+                     kernel_size=1,
+                     strides=strides,
+                     activation=None,
+                     normalization=False)
+
+    x = add([x, y])
+    return x
 
 
 def build_model(input_shape, output_shape=None):
@@ -29,8 +126,23 @@ def build_model(input_shape, output_shape=None):
     x = concatenate([inputs, inputs, inputs], axis=-1)
     tail = Model(inputs, x)
     y = base_model.output
+    y = encoder_layer(y,
+                      256,
+                      strides=2,
+                      kernel_size=3)
+    y = encoder_layer(y,
+                      128,
+                      strides=2,
+                      kernel_size=3)
+    y = encoder_layer(y,
+                      64,
+                      strides=2,
+                      kernel_size=3)
+    y = encoder_layer(y,
+                      32,
+                      strides=2,
+                      kernel_size=3)
     y = GlobalAveragePooling2D()(y)
-    y = Dense(1024, activation='relu')(y)
     y = Dense(630*4, activation='tanh')(y)
     y = Reshape((630, 4))(y)
 
@@ -47,7 +159,7 @@ def build_model(input_shape, output_shape=None):
     return g
 
 
-def encoder_layer(inputs,
+def encoder_layer1(inputs,
                   filters=16,
                   kernel_size=3,
                   strides=2,

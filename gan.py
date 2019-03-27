@@ -153,6 +153,77 @@ def lr_schedule(epoch):
     return lr
 
 
+def create_dataset(img, skel, gen):
+    print("Skel shape:", skel.shape)
+    print("Skel max:", np.amax(skel))
+    print("Skel min:", np.amin(skel))
+
+
+    pts = []
+    maxpts = 12270
+    for i in range(skel.shape[0]):
+        pix = skel[i]
+        pix = np.squeeze(pix)
+        # print(pix.shape)
+        pt = np.ones((maxpts, 3))
+        j = 0
+        for x in range(pix.shape[0]):
+            for y in range(pix.shape[1]):
+                if pix[x][y]>0:
+                    if j==0:
+                        pt[:,:] = (x, y, 0)
+                    pt[j] = (x, y, 0)
+                    j += 1
+                    if j >= (maxpts - 1):
+                        j = maxpts - 1
+        pts.append(pt)
+
+    pts = np.array(pts).astype(np.uint8)
+    print("Skel gt shape:", pts.shape)
+    print("Skel gt max:", np.amax(pts))
+    print("Skel gt min:", np.amin(pts))
+    print("Skel gt dtype:", pts.dtype)
+    filename = "out_pc.npy"
+    print("Saving to ", filename) 
+    np.save(filename, pts)
+        
+    pts = []
+    for i in range(img.shape[0]):
+        pix = img[i]
+        pix = np.expand_dims(pix, axis=0)
+        out_pix = gen.predict([pix, pix, pix, pix])
+        out_pix[out_pix>=0.2] = 1.0
+        out_pix[out_pix<0.1] = 0.0
+        out_pix = np.squeeze(out_pix)
+        # print(out_pix.shape)
+        #out_pix = np.squeeze(out_pix) * 255.0
+        #out_pix = out_pix.astype(np.uint8)
+        pt = np.zeros((maxpts, 3))
+        j = 0
+        assert(out_pix.shape[0]==out_pix.shape[1])
+        for x in range(out_pix.shape[0]):
+            for y in range(out_pix.shape[1]):
+                if out_pix[x][y]>0:
+                    if j==0:
+                        pt[:,:] = (x, y, 0)
+                    pt[j] = (x, y, 0)
+                    j += 1
+                    if j >= (maxpts - 1):
+                        j = maxpts - 1
+        pts.append(pt)
+
+
+    pts *= 255
+    pts = np.array(pts).astype(np.uint8)
+    print("Skel pred shape:", pts.shape)
+    print("Skel pred max:", np.amax(pts))
+    print("Skel pred min:", np.amin(pts))
+    print("Skel pred dtype:", pts.dtype)
+    filename = "in_pc.npy"
+    print("Saving to ", filename) 
+    np.save(filename, pts)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     help_ = "Gen weights"
@@ -166,6 +237,11 @@ if __name__ == '__main__':
                         help=help_)
     help_ = "Plot model"
     parser.add_argument("--plot",
+                        default=False,
+                        action='store_true',
+                        help=help_)
+    help_ = "Create point cloud dataset"
+    parser.add_argument("--createdata",
                         default=False,
                         action='store_true',
                         help=help_)
@@ -198,8 +274,10 @@ if __name__ == '__main__':
         outfile = "out_pts.npy"
     print("Loading ... ", infile) 
     input_pix = np.load(infile)
+    print("input shape: ", input_pix.shape)
     print("Loading ... ", outfile) 
     output_pix = np.load(outfile)
+    print("output shape: ", output_pix.shape)
 
     print("batch size: ", args.batch_size)
     input_shape = input_pix.shape[1:]
@@ -216,6 +294,19 @@ if __name__ == '__main__':
         print("Loading generator weights ...", args.gen)
         generator.load_weights(args.gen)
 
+    if args.createdata:
+        x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
+        x = np.concatenate((input_pix, x), axis=0)
+        y = np.concatenate((output_pix, y), axis=0)
+        #x = input_pix
+        #y = output_pix
+        print("Augmented input shape: ", x.shape)
+        print("Augmented output shape: ", y.shape)
+        x = x.astype('float32') / 255
+        # y = y.astype('float32') / 255
+        create_dataset(x, y, generator)
+        exit(0)
+            
     if not args.train:
         if args.pix:
             predict_pix(generator, ispt=False)
@@ -266,6 +357,7 @@ if __name__ == '__main__':
         xval = input_pix.astype('float32') / 255
         xval = [xval, xval, xval, xval]
         yval = output_pix.astype('float32') / 255
+
         for i in range(4):
             x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
             x = np.concatenate((input_pix, x), axis=0)

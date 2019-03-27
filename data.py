@@ -42,6 +42,7 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
     pix = []
     pmax = 0
     pmin = 255
+    maxpts = 0
     for f in files:
         pix_file = os.path.join(path, f)
         print(pix_file)
@@ -50,6 +51,8 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
         else:
             image = np.zeros((256,256), dtype=np.uint8)
             pix_data = read_points(pix_file)
+            if len(pix_data) > maxpts:
+                maxpts = len(pix_data)
             for p in pix_data:
                 if p[0]>pmax:
                     pmax = p[0]
@@ -69,6 +72,8 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
 
         pix.append(pix_data)
 
+    # Max pts:  12270
+    print("Max pts: ", maxpts)
     pix = np.array(pix)
     print("Shape: ", pix.shape)
     print("PMin: ", pmin)
@@ -80,7 +85,7 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
     print("Max: ", np.amax(pix))
     if not istest:
         print("Saving to ", filename) 
-        # np.save(filename, pix)
+        np.save(filename, pix)
     return pix
 
 
@@ -113,6 +118,6 @@ if __name__ == '__main__':
     # parser.add_argument("--pix_file", default='coords_apple-1-full.pts', help=help_)
     args = parser.parse_args()
 
-    pix = get_in_pix(filename="in_pts.npy", ispix=False, isskel=False)
-    # pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=False, istest=False)
+    # pix = get_in_pix(filename="in_pts.npy", ispix=False, isskel=False)
+    pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=True, istest=False)
     # pix = get_out_pix()

@@ -70,11 +70,10 @@ def build_model(input_shape, filters=64, activation='linear'):
     d1 = decoder_layer(d0, e3, 128)
     d2 = decoder_layer(d1, e2, 64)
     d3 = decoder_layer(d2, e1, 32)
-    outputs = Conv1D(filters=32,
-                     kernel_size=3,
-                     padding='same')(d3)
-    outputs = Conv1D(filters=1,
+    outputs = encoder_layer(d3, 16)
+    outputs = Conv1D(filters=3,
                      kernel_size=1,
+                     activation='sigmoid',
                      padding='same')(outputs)
     model = Model(inputs, outputs)
     model.summary()
@@ -107,6 +106,11 @@ if __name__ == '__main__':
     parser.add_argument("--chamfer", default=False, action='store_true', help=help_)
     help_ = "Shapnet category or class (chair, airplane, etc)"
     parser.add_argument("-a", "--category", default='all', help=help_)
+    help_ = "Plot model"
+    parser.add_argument("--plot",
+                        default=False,
+                        action='store_true',
+                        help=help_)
     args = parser.parse_args()
 
     maxpts = 1024 * 12
@@ -116,6 +120,10 @@ if __name__ == '__main__':
     model.compile(loss=loss,
                   optimizer=optimizer,
                   metrics=['accuracy'])
+
+    if args.plot:
+        from keras.utils import plot_model
+        plot_model(model, to_file='pc_unet.png', show_shapes=True)
 
     # prepare model model saving directory.
     save_dir = os.path.join(os.getcwd(), 'weights')

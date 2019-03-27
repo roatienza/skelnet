@@ -52,7 +52,7 @@ def predict_pix(model, path=PX_PATH, ispt=False):
         pix = np.expand_dims(pix, axis=0)
         out_pix = generator.predict([pix, pix, pix, pix])
         print("Max: ", np.amax(pix))
-        out_pix[out_pix>=0.3] = 1.0
+        out_pix[out_pix>=0.2] = 1.0
         out_pix[out_pix<0.1] = 0.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)
@@ -153,14 +153,14 @@ def lr_schedule(epoch):
     return lr
 
 
-def create_dataset(img, skel, gen):
+def create_skel(skel, gen):
     print("Skel shape:", skel.shape)
     print("Skel max:", np.amax(skel))
     print("Skel min:", np.amin(skel))
 
 
     pts = []
-    maxpts = 12270
+    maxpts = 1024 * 12
     for i in range(skel.shape[0]):
         pix = skel[i]
         pix = np.squeeze(pix)
@@ -186,8 +186,13 @@ def create_dataset(img, skel, gen):
     filename = "out_pc.npy"
     print("Saving to ", filename) 
     np.save(filename, pts)
+
+    return
+
+def create_pred(img, gen):
         
     pts = []
+    maxpts = 1024 * 12
     for i in range(img.shape[0]):
         pix = img[i]
         pix = np.expand_dims(pix, axis=0)
@@ -195,9 +200,6 @@ def create_dataset(img, skel, gen):
         out_pix[out_pix>=0.2] = 1.0
         out_pix[out_pix<0.1] = 0.0
         out_pix = np.squeeze(out_pix)
-        # print(out_pix.shape)
-        #out_pix = np.squeeze(out_pix) * 255.0
-        #out_pix = out_pix.astype(np.uint8)
         pt = np.zeros((maxpts, 3))
         j = 0
         assert(out_pix.shape[0]==out_pix.shape[1])
@@ -214,7 +216,8 @@ def create_dataset(img, skel, gen):
 
 
     pts *= 255
-    pts = np.array(pts).astype(np.uint8)
+    pts = np.array(pts)
+    pts = pts.astype(np.uint8)
     print("Skel pred shape:", pts.shape)
     print("Skel pred max:", np.amax(pts))
     print("Skel pred min:", np.amin(pts))
@@ -304,7 +307,8 @@ if __name__ == '__main__':
         print("Augmented output shape: ", y.shape)
         x = x.astype('float32') / 255
         # y = y.astype('float32') / 255
-        create_dataset(x, y, generator)
+        create_pred(x, generator)
+        create_skel(y, generator)
         exit(0)
             
     if not args.train:

@@ -52,7 +52,7 @@ def predict_pix(model, path=PX_PATH, ispt=False):
         pix = np.expand_dims(pix, axis=0)
         out_pix = generator.predict([pix, pix, pix, pix])
         print("Max: ", np.amax(pix))
-        out_pix[out_pix>=0.2] = 1.0
+        out_pix[out_pix>=0.3] = 1.0
         out_pix[out_pix<0.1] = 0.0
         out_pix = np.squeeze(out_pix) * 255.0
         out_pix = out_pix.astype(np.uint8)

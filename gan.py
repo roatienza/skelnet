@@ -197,12 +197,11 @@ def create_pred(img, gen):
         pix = img[i]
         pix = np.expand_dims(pix, axis=0)
         out_pix = gen.predict([pix, pix, pix, pix])
-        out_pix[out_pix>=0.2] = 1.0
+        out_pix[out_pix>=0.2] = 255.0
         out_pix[out_pix<0.1] = 0.0
         out_pix = np.squeeze(out_pix)
         pt = np.zeros((maxpts, 3))
         j = 0
-        assert(out_pix.shape[0]==out_pix.shape[1])
         for x in range(out_pix.shape[0]):
             for y in range(out_pix.shape[1]):
                 if out_pix[x][y]>0:
@@ -215,7 +214,6 @@ def create_pred(img, gen):
         pts.append(pt)
 
 
-    pts *= 255
     pts = np.array(pts)
     pts = pts.astype(np.uint8)
     print("Skel pred shape:", pts.shape)

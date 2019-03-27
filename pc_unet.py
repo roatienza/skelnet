@@ -139,7 +139,8 @@ if __name__ == '__main__':
     lr_scheduler = LearningRateScheduler(lr_schedule)
     callbacks = [checkpoint, lr_scheduler]
 
-    exit(0)
+    x = np.load("in_pc.npy")
+    y = np.load("out_pc.npy")
     print("Augmented input shape: ", x.shape)
     print("Augmented output shape: ", y.shape)
     x = x.astype('float32') / 255

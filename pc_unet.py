@@ -56,7 +56,26 @@ def compression_layer(x, y, maxpool=True):
                padding='same')(x)
     return x, y
         
+
 def build_model(input_shape, filters=64, activation='linear', batch_size=16):
+    # build decoder model
+    inputs = Input(shape=input_shape, name='input')
+    print(np.prod(input_shape))
+    x = Flatten()(inputs)
+    dim = 1024
+    x = Dense(dim, activation='relu')(x)
+    x = Dense(dim, activation='relu')(x)
+    x = Dense(dim, activation='relu')(x)
+    x = Dense(np.prod(input_shape), activation='linear')(x)
+    outputs = Reshape(input_shape)(x)
+
+    model = Model(inputs, outputs, name='output')
+    model.summary()
+    plot_model(model, to_file="pc_mlp.png", show_shapes=True)
+    return model
+
+
+def build_model1(input_shape, filters=64, activation='linear', batch_size=16):
 
     inputs = Input(shape=input_shape, name='encoder_input')
     e1 = encoder_layer(inputs, 32, strides=1)

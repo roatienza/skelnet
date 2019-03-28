@@ -58,7 +58,6 @@ def compression_layer(x, y, maxpool=True):
         
 def build_model(input_shape, filters=64, activation='linear', batch_size=16):
 
-    inputs = Input(shape=input_shape)
     inputs = Input(shape=input_shape, name='encoder_input')
     e1 = encoder_layer(inputs, 32, strides=1)
     e2 = encoder_layer(e1, 64, strides=2)
@@ -73,7 +72,7 @@ def build_model(input_shape, filters=64, activation='linear', batch_size=16):
     outputs = encoder_layer(d3, 16)
     outputs = Conv1D(filters=3,
                      kernel_size=1,
-                     activation='sigmoid',
+                     activation='linear',
                      padding='same')(outputs)
     mask  = np.ones((batch_size, input_shape[0], input_shape[1]))
     mask[:,:,2] = 0
@@ -85,7 +84,7 @@ def build_model(input_shape, filters=64, activation='linear', batch_size=16):
     return model
     
 
-def loss(gt, pred):
+def cd_loss(gt, pred):
     from structural_losses import tf_nndistance
     p1top2 , _, p2top1, _ = tf_nndistance.nn_distance(pred, gt)
     cd_loss = K.mean(p1top2) + K.mean(p2top1)
@@ -108,7 +107,7 @@ def eval(model):
 
     xtest = np.load("test_pc.npy")
 
-    xtest = xtest.astype('float32') / 255
+    #xtest = xtest.astype('float32') / 255
     files = list_files(PT_PATH)
 
     for i in range(xtest.shape[0]):
@@ -158,9 +157,9 @@ if __name__ == '__main__':
     input_shape = (maxpts, 3)
     model = build_model(input_shape, batch_size=batch_size)
     optimizer = RMSprop(lr=1e-3)
-    model.compile(loss=loss,
-                  optimizer=optimizer,
-                  metrics=['accuracy'])
+    model.compile(loss=cd_loss,
+                  # loss_weights=[100.],
+                  optimizer=optimizer)
 
     if args.plot:
         from keras.utils import plot_model
@@ -198,6 +197,6 @@ if __name__ == '__main__':
     print("Max out:", np.amax(y))
     print("Augmented input shape: ", x.shape)
     print("Augmented output shape: ", y.shape)
-    x = x.astype('float32') / 255
-    y = y.astype('float32') / 255
+    #x = x.astype('float32') / 255
+    #y = y.astype('float32') / 255
     model.fit(x, y, epochs=200, batch_size=batch_size, callbacks=callbacks)

@@ -155,7 +155,7 @@ if __name__ == '__main__':
                         help=help_)
     args = parser.parse_args()
 
-    batch_size = 16
+    batch_size = 1
     maxpts = 1024 * 12
     input_shape = (maxpts, 3)
     model = build_model(input_shape, batch_size=batch_size)

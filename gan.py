@@ -116,13 +116,11 @@ def create_skel(skel, gen):
         pix = skel[i]
         pix = np.squeeze(pix)
         # print(pix.shape)
-        pt = np.ones((maxpts, 3))
+        pt = np.zeros((maxpts, 3))
         j = 0
         for x in range(pix.shape[0]):
             for y in range(pix.shape[1]):
                 if pix[x][y]>0:
-                    if j==0:
-                        pt[:,:] = (x, y, 0)
                     pt[j] = (x, y, 0)
                     j += 1
                     if j >= (maxpts - 1):
@@ -158,8 +156,6 @@ def create_pred(img, gen):
         for x in range(out_pix.shape[0]):
             for y in range(out_pix.shape[1]):
                 if out_pix[x][y]>0:
-                    if j==0:
-                        pt[:,:] = (x, y, 0)
                     pt[j] = (x, y, 0)
                     j += 1
                     if j >= (maxpts - 1):

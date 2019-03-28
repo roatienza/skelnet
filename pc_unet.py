@@ -134,10 +134,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     help_ = "Load h5 model trained weights"
     parser.add_argument("-w", "--weights", help=help_)
-    help_ = "Use Chamder distance loss"
-    parser.add_argument("--chamfer", default=False, action='store_true', help=help_)
-    help_ = "Shapnet category or class (chair, airplane, etc)"
-    parser.add_argument("-a", "--category", default='all', help=help_)
     help_ = "Plot model"
     parser.add_argument("--plot",
                         default=False,
@@ -153,9 +149,11 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true',
                         help=help_)
+    help_ = "Batch size"
+    parser.add_argument("-b", "--batch_size", type=int, default=16, help=help_)
     args = parser.parse_args()
 
-    batch_size = 1
+    batch_size = args.batch_size
     maxpts = 1024 * 12
     input_shape = (maxpts, 3)
     model = build_model(input_shape, batch_size=batch_size)

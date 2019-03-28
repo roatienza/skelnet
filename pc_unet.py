@@ -94,7 +94,7 @@ def loss(gt, pred):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 100:
+    if epoch > 160:
         lr = 1e-5
     elif epoch > 60:
         lr = 1e-4
@@ -202,4 +202,4 @@ if __name__ == '__main__':
     print("Augmented output shape: ", y.shape)
     x = x.astype('float32') / 255
     y = y.astype('float32') / 255
-    model.fit(x, y, epochs=100, batch_size=batch_size, callbacks=callbacks)
+    model.fit(x, y, epochs=200, batch_size=batch_size, callbacks=callbacks)

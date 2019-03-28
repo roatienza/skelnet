@@ -16,8 +16,8 @@ from keras.models import Model
 from keras.utils import plot_model
 from keras import backend as K
 from keras.optimizers import RMSprop
-from keras.layers.merge import concatenate
-from keras.layers.merge import concatenate
+from keras.layers.merge import concatenate, multiply
+from utils import list_files, read_gray, augment
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -75,7 +75,12 @@ def build_model(input_shape, filters=64, activation='linear'):
                      kernel_size=1,
                      activation='sigmoid',
                      padding='same')(outputs)
-    model = Model(inputs, outputs)
+    mask  = np.ones(input_shape)
+    mask[:,2] = 0
+    mask_tensor = K.variable(mask.astype('float32'))
+    mask_inputs = Input(tensor=mask_tensor)
+    outputs = multiply([outputs, mask_inputs])
+    model = Model([inputs, mask_inputs], outputs)
     model.summary()
     return model
     
@@ -96,6 +101,33 @@ def lr_schedule(epoch):
     print('Learning rate: ', lr)
     return lr
 
+PT_PATH = "dataset/point/test"
+PR_PATH = "dataset/point/cdpred"
+
+def eval(model):
+
+    xtest = np.load("test_pc.npy")
+
+    xtest = xtest.astype('float32') / 255
+    files = list_files(PT_PATH)
+
+    for i in range(xtest.shape[0]):
+        pt = xtest[i]
+        pt = np.expand_dims(pt, axis=0)
+        pts = model.predict(pt)
+        pts = np.squeeze(pts) * 255.0
+        pts = pts.astype(np.uint8)
+        print(pts.shape)
+        filename = os.path.join(PR_PATH, files[i])
+        filename = filename.replace(".png", ".pts")
+        filename = filename.replace("full", "skel")
+        pix_data = pts
+        print(filename)
+        with open(filename, "w+") as  fh:
+            for j in range(pix_data.shape[0]):
+                x = pix_data[j][0]
+                y = pix_data[j][1]
+                fh.write("%d %d\n" % (x, y))
 
 
 if __name__ == '__main__':
@@ -108,6 +140,16 @@ if __name__ == '__main__':
     parser.add_argument("-a", "--category", default='all', help=help_)
     help_ = "Plot model"
     parser.add_argument("--plot",
+                        default=False,
+                        action='store_true',
+                        help=help_)
+    help_ = "Train"
+    parser.add_argument("--train",
+                        default=False,
+                        action='store_true',
+                        help=help_)
+    help_ = "Evaluate"
+    parser.add_argument("--eval",
                         default=False,
                         action='store_true',
                         help=help_)
@@ -125,6 +167,16 @@ if __name__ == '__main__':
         from keras.utils import plot_model
         plot_model(model, to_file='pc_unet.png', show_shapes=True)
 
+    if args.weights is not None:
+        print("Loading model weights ...", args.weights)
+        model.load_weights(args.weights)
+
+
+    if args.eval:
+        eval(model)
+        exit(0)
+
+
     # prepare model model saving directory.
     save_dir = os.path.join(os.getcwd(), 'weights')
     model_name = 'skelnet_pc_model.h5' 
@@ -141,6 +193,8 @@ if __name__ == '__main__':
 
     x = np.load("in_pc.npy")
     y = np.load("out_pc.npy")
+    print("Max in:", np.amax(x))
+    print("Max out:", np.amax(y))
     print("Augmented input shape: ", x.shape)
     print("Augmented output shape: ", y.shape)
     x = x.astype('float32') / 255

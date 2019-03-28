@@ -114,7 +114,7 @@ def eval(model):
         pt = xtest[i]
         pt = np.expand_dims(pt, axis=0)
         pts = model.predict(pt)
-        pts = np.squeeze(pts) * 255.0
+        pts = np.squeeze(pts)
         pts = pts.astype(np.uint8)
         print(pts.shape)
         filename = os.path.join(PR_PATH, files[i])
@@ -126,7 +126,8 @@ def eval(model):
             for j in range(pix_data.shape[0]):
                 x = pix_data[j][0]
                 y = pix_data[j][1]
-                fh.write("%d %d\n" % (x, y))
+                if x>0 and y>0:
+                    fh.write("%d %d\n" % (x, y))
 
 
 if __name__ == '__main__':

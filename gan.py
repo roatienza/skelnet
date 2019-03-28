@@ -72,8 +72,6 @@ def predict_pix(model, path=PX_PATH, ispt=False):
             for x in range(out_pix.shape[0]):
                 for y in range(out_pix.shape[1]):
                     if out_pix[x][y]>0:
-                        if j==0:
-                            pt[:,:] = (x, y, 0)
                         pt[j] = (x, y, 0)
                         j += 1
                         if j >= (maxpts - 1):

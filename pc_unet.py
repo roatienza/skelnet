@@ -56,7 +56,7 @@ def compression_layer(x, y, maxpool=True):
                padding='same')(x)
     return x, y
         
-def build_model(input_shape, filters=64, activation='linear'):
+def build_model(input_shape, filters=64, activation='linear', batch_size=16):
 
     inputs = Input(shape=input_shape)
     inputs = Input(shape=input_shape, name='encoder_input')
@@ -75,8 +75,8 @@ def build_model(input_shape, filters=64, activation='linear'):
                      kernel_size=1,
                      activation='sigmoid',
                      padding='same')(outputs)
-    mask  = np.ones(input_shape)
-    mask[:,2] = 0
+    mask  = np.ones((batch_size, input_shape[0], input_shape[1]))
+    mask[:,:,2] = 0
     mask_tensor = K.variable(mask.astype('float32'))
     mask_inputs = Input(tensor=mask_tensor)
     outputs = multiply([outputs, mask_inputs])
@@ -155,9 +155,10 @@ if __name__ == '__main__':
                         help=help_)
     args = parser.parse_args()
 
+    batch_size = 16
     maxpts = 1024 * 12
     input_shape = (maxpts, 3)
-    model = build_model(input_shape)
+    model = build_model(input_shape, batch_size=batch_size)
     optimizer = RMSprop(lr=1e-3)
     model.compile(loss=loss,
                   optimizer=optimizer,
@@ -192,11 +193,13 @@ if __name__ == '__main__':
     callbacks = [checkpoint, lr_scheduler]
 
     x = np.load("in_pc.npy")
+    x = x[:15472]
     y = np.load("out_pc.npy")
+    y = y[:15472]
     print("Max in:", np.amax(x))
     print("Max out:", np.amax(y))
     print("Augmented input shape: ", x.shape)
     print("Augmented output shape: ", y.shape)
     x = x.astype('float32') / 255
     y = y.astype('float32') / 255
-    model.fit(x, y, epochs=100, batch_size=32, callbacks=callbacks)
+    model.fit(x, y, epochs=100, batch_size=batch_size, callbacks=callbacks)

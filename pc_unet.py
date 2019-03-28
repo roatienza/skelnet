@@ -124,7 +124,7 @@ PR_PATH = "dataset/point/cdpred"
 
 def eval(model):
 
-    xtest = np.load("test_pc.npy")
+    xtest = np.load("npy/test_pc.npy")
 
     #xtest = xtest.astype('float32') / 255
     files = list_files(PT_PATH)

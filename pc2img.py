@@ -26,7 +26,7 @@ from utils import list_files, read_gray
 #dataset/point/full/coords_rat-09-full.pts
 #dataset/point/skel/coords_pocket-2-skel.pts
 
-PT_PATH = "dataset/point/skel"
+PT_PATH = "dataset/point/cdpred"
 
 def pc2img():
     path = PT_PATH

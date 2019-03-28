@@ -88,7 +88,7 @@ def predict_pix(model, path=PX_PATH, ispt=False):
     print("Skel test max:", np.amax(pts))
     print("Skel test min:", np.amin(pts))
     print("Skel test dtype:", pts.dtype)
-    filename = "test_pc.npy"
+    filename = "npy/test_pc.npy"
     print("Saving to ", filename) 
     np.save(filename, pts)
 
@@ -130,7 +130,7 @@ def create_skel(skel, gen):
     print("Skel gt max:", np.amax(pts))
     print("Skel gt min:", np.amin(pts))
     print("Skel gt dtype:", pts.dtype)
-    filename = "out_pc.npy"
+    filename = "npy/out_pc.npy"
     print("Saving to ", filename) 
     np.save(filename, pts)
 
@@ -167,7 +167,7 @@ def create_pred(img, gen):
     print("Skel pred max:", np.amax(pts))
     print("Skel pred min:", np.amin(pts))
     print("Skel pred dtype:", pts.dtype)
-    filename = "in_pc.npy"
+    filename = "npy/in_pc.npy"
     print("Saving to ", filename) 
     np.save(filename, pts)
 
@@ -216,11 +216,11 @@ if __name__ == '__main__':
     thresh = 0.2
 
     if args.pix:
-        infile = "in_pix.npy"
-        outfile = "out_pix.npy"
+        infile = "npy/in_pix.npy"
+        outfile = "npy/out_pix.npy"
     else:
-        infile = "in_pts.npy"
-        outfile = "out_pts.npy"
+        infile = "npy/in_pts.npy"
+        outfile = "npy/out_pts.npy"
     print("Loading ... ", infile) 
     input_pix = np.load(infile)
     print("input shape: ", input_pix.shape)

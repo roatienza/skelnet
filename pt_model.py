@@ -52,6 +52,7 @@ def decoder_layer(inputs,
                   kernel_size=4,
                   strides=2,
                   activation='relu',
+                  nodropout=False,
                   instance_norm=True):
 
     conv = Conv2DTranspose(filters=filters,
@@ -67,7 +68,8 @@ def decoder_layer(inputs,
     else:
         x = LeakyReLU(alpha=0.2)(x)
     x = conv(x)
-    x = Dropout(0.5)(x)
+    if not nodropout:
+        x = Dropout(0.5)(x)
     x = concatenate([x, paired_inputs])
     return x
 
@@ -75,7 +77,7 @@ def decoder_layer(inputs,
 def build_generator(input_shape,
                     output_shape=None,
                     kernel_size=4,
-                    name=None):
+                    nodropout=False):
 
     channels = int(output_shape[-1])
 
@@ -119,36 +121,43 @@ def build_generator(input_shape,
     d11 = decoder_layer(e18,
                         e17,
                         512,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 4x4 x 512+512
     d12 = decoder_layer(d11,
                         e16,
                         1024,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 8x8 x 1024+512
     d13 = decoder_layer(d12,
                         e15,
                         1024,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 16x16 x 1024+512
     d14 = decoder_layer(d13,
                         e14,
                         1024,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 32x32 x 1024+512
     d15 = decoder_layer(d14,
                         e13,
                         1024,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 64x64 x 1024+256
     d16 = decoder_layer(d15,
                         e12,
                         512,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 128x128 512+128
     d17 = decoder_layer(d16,
                         e11,
                         256,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 256x256 256+64
 
@@ -186,18 +195,21 @@ def build_generator(input_shape,
                         e23,
                         512,
                         strides=4,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 16x16 x 512+256
     d22 = decoder_layer(d21,
                         e22,
                         1024,
                         strides=4,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 64x64 x 1024+128
     d23 = decoder_layer(d22,
                         e21,
                         512,
                         strides=4,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 256x256 x 1024+64
     o2 = Conv2DTranspose(channels,
@@ -228,12 +240,14 @@ def build_generator(input_shape,
                         e32,
                         512,
                         strides=8,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 32x32 x 512+128 
     d32 = decoder_layer(d31,
                         e31,
                         512,
                         strides=8,
+                        nodropout=nodropout,
                         kernel_size=kernel_size)
     # 256x256 x 1024+64
     o3 = Conv2DTranspose(channels,

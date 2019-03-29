@@ -128,6 +128,11 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true',
                         help=help_)
+    help_ = "No dropout"
+    parser.add_argument("--nodropout",
+                        default=False,
+                        action='store_true',
+                        help=help_)
     help_ = "Batch size"
     parser.add_argument("--batch_size", type=int, default=8, help=help_)
 
@@ -154,7 +159,7 @@ if __name__ == '__main__':
     input_shape = input_pix.shape[1:]
     output_shape = output_pix.shape[1:]
 
-    generator = build_generator(input_shape, output_shape, kernel_size=3)
+    generator = build_generator(input_shape, output_shape, kernel_size=3, nodropout=args.nodropout)
 
     if args.plot:
         from keras.utils import plot_model

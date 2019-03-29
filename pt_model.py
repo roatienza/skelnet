@@ -77,7 +77,8 @@ def decoder_layer(inputs,
 def build_generator(input_shape,
                     output_shape=None,
                     kernel_size=4,
-                    nodropout=False):
+                    nodropout=False,
+                    name='pt_psp_unet'):
 
     channels = int(output_shape[-1])
 

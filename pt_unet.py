@@ -185,7 +185,10 @@ if __name__ == '__main__':
         if args.pix:
             model_name = 'skelnet_pix_model.h5' 
         else:
-            model_name = 'skelnet_pt_model.h5' 
+            if args.nodropout:
+                model_name = 'skelnet_pt_nodropout_model.h5' 
+            else:
+                model_name = 'skelnet_pt_model.h5' 
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
         filepath = os.path.join(save_dir, model_name)

@@ -136,6 +136,9 @@ if __name__ == '__main__':
     help_ = "Batch size"
     parser.add_argument("--batch_size", type=int, default=8, help=help_)
 
+    help_ = "Kernel size"
+    parser.add_argument("--kernel_size", type=int, default=3, help=help_)
+
     help_ = "ntimes"
     parser.add_argument("--ntimes", type=int, default=8, help=help_)
 
@@ -159,7 +162,7 @@ if __name__ == '__main__':
     input_shape = input_pix.shape[1:]
     output_shape = output_pix.shape[1:]
 
-    generator = build_generator(input_shape, output_shape, kernel_size=3, nodropout=args.nodropout)
+    generator = build_generator(input_shape, output_shape, kernel_size=args.kernel_size, nodropout=args.nodropout)
 
     if args.plot:
         from keras.utils import plot_model

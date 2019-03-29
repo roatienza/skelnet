@@ -196,7 +196,7 @@ def build_generator(input_shape,
     # 64x64 x 1024+128
     d23 = decoder_layer(d22,
                         e21,
-                        1024,
+                        512,
                         strides=4,
                         kernel_size=kernel_size)
     # 256x256 x 1024+64
@@ -232,7 +232,7 @@ def build_generator(input_shape,
     # 32x32 x 512+128 
     d32 = decoder_layer(d31,
                         e31,
-                        1024,
+                        512,
                         strides=8,
                         kernel_size=kernel_size)
     # 256x256 x 1024+64

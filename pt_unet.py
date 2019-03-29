@@ -118,11 +118,6 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true',
                         help=help_)
-    help_ = "Create point cloud dataset"
-    parser.add_argument("--createdata",
-                        default=False,
-                        action='store_true',
-                        help=help_)
     help_ = "Aug"
     parser.add_argument("--aug",
                         default=False,
@@ -160,26 +155,16 @@ if __name__ == '__main__':
     output_shape = output_pix.shape[1:]
 
     generator = build_generator(input_shape, output_shape, kernel_size=3)
-    exit(0)
 
     if args.plot:
         from keras.utils import plot_model
         plot_model(generator, to_file='generator.png', show_shapes=True)
 
+    exit(0)
     if args.gen is not None:
         print("Loading generator weights ...", args.gen)
         generator.load_weights(args.gen)
 
-    if args.createdata:
-        x, y = augment(input_pix, output_pix, ntimes=args.ntimes)
-        x = np.concatenate((input_pix, x), axis=0)
-        y = np.concatenate((output_pix, y), axis=0)
-        print("Augmented input shape: ", x.shape)
-        print("Augmented output shape: ", y.shape)
-        create_pred(x, generator)
-        create_skel(y, generator)
-        exit(0)
-            
     if not args.train:
         if args.pix:
             predict_pix(generator, ispt=False)

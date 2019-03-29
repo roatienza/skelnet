@@ -213,7 +213,7 @@ if __name__ == '__main__':
     parser.add_argument("--gpus", type=int, default=1, help=help_)
 
     args = parser.parse_args()
-    thresh = 0.2
+    thresh = 0.5
 
     if args.pix:
         infile = "npy/in_pix.npy"

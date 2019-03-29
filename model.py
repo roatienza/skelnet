@@ -26,7 +26,7 @@ def encoder_layer(inputs,
                   filters=16,
                   kernel_size=3,
                   strides=2,
-                  activation='relu',
+                  activation='lrelu',
                   instance_norm=True):
 
     conv = Conv2D(filters=filters,
@@ -51,7 +51,7 @@ def decoder_layer(inputs,
                   filters=16,
                   kernel_size=3,
                   strides=2,
-                  activation='relu',
+                  activation='lrelu',
                   instance_norm=True):
 
     conv = Conv2DTranspose(filters=filters,

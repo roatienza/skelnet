@@ -10,7 +10,7 @@ from __future__ import print_function
 import numpy as np
 import argparse
 import os
-from pt_model import build_generator
+from pts_model import build_generator
 from skimage.io import imsave
 from utils import list_files, read_gray, augment
 from keras.preprocessing.image import ImageDataGenerator

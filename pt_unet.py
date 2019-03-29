@@ -160,7 +160,6 @@ if __name__ == '__main__':
         from keras.utils import plot_model
         plot_model(generator, to_file='generator.png', show_shapes=True)
 
-    exit(0)
     if args.gen is not None:
         print("Loading generator weights ...", args.gen)
         generator.load_weights(args.gen)
@@ -181,7 +180,7 @@ if __name__ == '__main__':
         if args.pix:
             model_name = 'skelnet_pix_model.h5' 
         else:
-            model_name = 'skelnet_pts_model.h5' 
+            model_name = 'skelnet_pt_model.h5' 
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
         filepath = os.path.join(save_dir, model_name)
@@ -195,7 +194,7 @@ if __name__ == '__main__':
 
         # train the model with input images and labels
         xval = input_pix.astype('float32') / 255
-        xval = [xval, xval, xval, xval]
+        xval = [xval, xval, xval]
         yval = output_pix.astype('float32') / 255
 
         x, y = augment(input_pix, output_pix, ntimes=args.ntimes)

@@ -29,7 +29,7 @@ def flip(inputs, outputs, ntimes=8):
     return transform(inputs, outputs, ntimes=2, args=args)
 
 def scale(inputs, outputs, ntimes=8):
-    args = dict(zoom_range=[0.5, 0.9])
+    args = dict(zoom_range=[0.6, 0.95])
     print("Scaling...")
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 
@@ -54,12 +54,13 @@ def transform(inputs, outputs, ntimes=8, args=None):
 
 
 def augment(inputs, outputs, ispts=False, ntimes=8):
+    print("Augmenting for %d times..." % ntimes)
     x1, y1 = rotate(inputs, outputs, ntimes=ntimes)
     x2, y2 = translate(inputs, outputs, ntimes=ntimes)
     x3, y3 = scale(inputs, outputs, ntimes=ntimes)
-    # x4, y4 = flip(inputs, outputs, ntimes=ntimes)
-    x = np.concatenate((x1, x2, x3), axis=0)
-    y = np.concatenate((y1, y2, y3), axis=0)
+    x4, y4 = flip(inputs, outputs, ntimes=1)
+    x = np.concatenate((x1, x2, x3, x4), axis=0)
+    y = np.concatenate((y1, y2, y3, x4), axis=0)
     return x, y
 
 

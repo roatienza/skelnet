@@ -188,8 +188,8 @@ if __name__ == '__main__':
         if args.pix:
             model_name = 'skelnet_pix_model.h5' 
         else:
-            if args.nodropout:
-                model_name = 'skelnet_pt_nodropout_model.h5' 
+            if args.kernel_size>3:
+                model_name = 'skelnet_pt_kernel_model.h5' 
             else:
                 model_name = 'skelnet_pt_model.h5' 
         if not os.path.isdir(save_dir):

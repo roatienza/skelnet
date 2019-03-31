@@ -93,11 +93,11 @@ def predict_pix(model, path=PX_PATH, ispt=False):
     np.save(filename, pts)
 
 def lr_schedule(epoch):
-    lr = 1e-3
+    lr = 1e-4
     if epoch > 100:
         lr = 1e-5
     elif epoch > 60:
-        lr = 1e-4
+        lr = 0.5e-4
     print('Learning rate: ', lr)
     return lr
 

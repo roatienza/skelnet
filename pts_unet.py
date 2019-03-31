@@ -94,9 +94,9 @@ def predict_pix(model, path=PX_PATH, ispt=False):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 100:
+    if epoch > 80:
         lr = 1e-5
-    elif epoch > 60:
+    elif epoch > 20:
         lr = 1e-4
     print('Learning rate: ', lr)
     return lr
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         else:
             predict_pix(generator, ispt=True)
     else:
-        optimizer = Adam(lr=1e-3)
+        optimizer = Adam(lr=1e-4)
         generator.compile(loss='binary_crossentropy',
                           optimizer=optimizer,
                           metrics=['accuracy'])

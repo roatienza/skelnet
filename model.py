@@ -21,6 +21,41 @@ from keras_contrib.layers.normalization.instancenormalization import InstanceNor
 import numpy as np
 import argparse
 
+def fine_model(input_shape):
+    growth_rate = 16
+    inputs = Input(shape=input_shape)
+    x = BatchNormalization()(inputs)
+    x = Activation('relu')(x)
+    x = Conv2D(32,
+               kernel_size=3,
+               padding='same',
+               kernel_initializer='he_normal')(x)
+    x = concatenate([inputs, x])
+
+    for j in range(6):
+        y = BatchNormalization()(x)
+        y = Activation('relu')(y)
+        y = Conv2D(4 * growth_rate,
+                   kernel_size=1,
+                   padding='same',
+                   kernel_initializer='he_normal')(y)
+        y = BatchNormalization()(y)
+        y = Activation('relu')(y)
+        y = Conv2D(growth_rate,
+                   kernel_size=3,
+                   padding='same',
+                   kernel_initializer='he_normal')(y)
+        x = concatenate([x, y])
+
+    x = Conv2D(1,
+               kernel_size=1,
+               padding='same',
+               activation='sigmoid',
+               kernel_initializer='he_normal')(y)
+    fine = Model(inputs, x)
+    fine.summary()
+    return fine
+
 
 def encoder_layer(inputs,
                   filters=16,

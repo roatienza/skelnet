@@ -53,7 +53,7 @@ def predict_pix(model, path=PX_PATH, ispt=False):
     for i in range(input_pix.shape[0]):
         pix = input_pix[i]
         pix = np.expand_dims(pix, axis=0)
-        out_pix = model.predict([pix, pix, pix, pix])
+        out_pix = model.predict([pix])
         print("Max: ", np.amax(pix))
         out_pix[out_pix>=thresh] = 1.0
         out_pix[out_pix<thresh] = 0.0
@@ -106,6 +106,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     help_ = "Gen weights"
     parser.add_argument("--gen",
+                        default=None,
+                        help=help_)
+    help_ = "Finegan Weights"
+    parser.add_argument("--weights",
                         default=None,
                         help=help_)
     help_ = "Train"
@@ -182,6 +186,9 @@ if __name__ == '__main__':
     inputs = [x, x, x, x]
     finegan = Model(x, fine(generator(inputs)))
     finegan.summary()
+    if args.weights is not None:
+        print("Loading finegan weights ...", args.weights)
+        finegan.load_weights(args.weights)
 
     if not args.train:
         exit(0)

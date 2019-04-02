@@ -188,13 +188,13 @@ if __name__ == '__main__':
         predict_pix(generator, ispt=True)
     else:
         optimizer = Adam(lr=1e-3)
-        finegan.compile(loss='binary_crossentropy',
+        finegan.compile(loss='mae',
                         optimizer=optimizer,
                         metrics=['accuracy'])
 
         # prepare model model saving directory.
         save_dir = os.path.join(os.getcwd(), 'weights')
-        model_name = 'skelnet_fine_pts_model.h5' 
+        model_name = 'skelnet_fine_mae_pts_model.h5' 
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
         filepath = os.path.join(save_dir, model_name)

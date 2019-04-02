@@ -24,7 +24,8 @@ import argparse
 def fine_model(input_shape):
     growth_rate = 16
     inputs = Input(shape=input_shape)
-    x = BatchNormalization()(inputs)
+    x = InstanceNormalization()(inputs)
+    # x = BatchNormalization()(inputs)
     x = Activation('relu')(x)
     x = Conv2D(32,
                kernel_size=3,
@@ -33,13 +34,15 @@ def fine_model(input_shape):
     x = concatenate([inputs, x])
 
     for j in range(6):
-        y = BatchNormalization()(x)
+        # y = BatchNormalization()(x)
+        y = InstanceNormalization()(x)
         y = Activation('relu')(y)
         y = Conv2D(4 * growth_rate,
                    kernel_size=1,
                    padding='same',
                    kernel_initializer='he_normal')(y)
-        y = BatchNormalization()(y)
+        #y = BatchNormalization()(y)
+        y = InstanceNormalization()(y)
         y = Activation('relu')(y)
         y = Conv2D(growth_rate,
                    kernel_size=3,

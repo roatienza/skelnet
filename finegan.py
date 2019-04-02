@@ -191,8 +191,7 @@ if __name__ == '__main__':
         finegan.load_weights(args.weights)
 
     if not args.train:
-        exit(0)
-        predict_pix(generator, ispt=True)
+        predict_pix(finegan, ispt=True)
     else:
         optimizer = Adam(lr=1e-3)
         finegan.compile(loss='mae',

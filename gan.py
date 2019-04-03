@@ -94,9 +94,9 @@ def predict_pix(model, path=PX_PATH, ispt=False):
 
 def lr_schedule(epoch):
     lr = 1e-3
-    if epoch > 100:
-        lr = 1e-5
-    elif epoch > 60:
+    if epoch > 60:
+        lr = 0.5e-5
+    elif epoch > 20:
         lr = 1e-4
     print('Learning rate: ', lr)
     return lr

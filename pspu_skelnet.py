@@ -88,7 +88,8 @@ class PSPU_SkelNet():
 
     def train(self):
         self.load_train_data()
-        self.build_model()
+        if self.model is None:
+            self.build_model()
         # prepare model model saving directory.
         save_dir = os.path.join(os.getcwd(), 'weights')
         if not os.path.isdir(save_dir):

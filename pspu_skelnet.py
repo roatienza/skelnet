@@ -104,12 +104,12 @@ class PSPU_SkelNet():
         print("Augmented output train data shape: ", y.shape)
         x = x.astype('float32') / 255
         y = y.astype('float32') / 255
-        generator.fit(x,
-                      y,
-                      epochs=EPOCHS,
-                      validation_data=(xval, yval),
-                      batch_size=self.batch_size,
-                      callbacks=callbacks)
+        self.model.fit(x,
+                       y,
+                       epochs=EPOCHS,
+                       validation_data=(xval, yval),
+                       batch_size=self.batch_size,
+                       callbacks=callbacks)
 
 
     def predict(self):

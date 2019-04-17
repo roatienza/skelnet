@@ -12,15 +12,13 @@ import argparse
 import os
 from model import build_generator, build_discriminator
 from skimage.io import imsave
-from utils import list_files, read_gray, augment, mae_bc
+from utils import list_files, read_gray, augment
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras.optimizers import Adam, RMSprop
 from keras.models import Model
 from keras.layers import Input
 import datetime
-
-from other_utils import test_generator, display_images
 
 
 PT_PATH = "dataset/pixel/train"
@@ -213,7 +211,7 @@ if __name__ == '__main__':
     parser.add_argument("--gpus", type=int, default=1, help=help_)
 
     args = parser.parse_args()
-    thresh = 0.45
+    thresh = 0.505
 
     if args.pix:
         infile = "npy/in_pix.npy"

@@ -118,6 +118,7 @@ if __name__ == '__main__':
     # parser.add_argument("--pix_file", default='coords_apple-1-full.pts', help=help_)
     args = parser.parse_args()
 
-    pix = get_in_pix(filename="in_pts_test.npy", ispix=False, isskel=False, istest=True)
+    pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=True, istest=False)
+    # pix = get_in_pix(filename="in_pts_test.npy", ispix=False, isskel=False, istest=True)
     # pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=True, istest=False)
     # pix = get_out_pix()

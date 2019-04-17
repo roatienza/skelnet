@@ -23,7 +23,7 @@ from keras.layers import Input
 
 TEST_PATH = "dataset/point/test_img"
 PRED_PATH = "dataset/point/root"
-EPOCHS = 140
+EPOCHS = 200
 
 
 class PSPU_SkelNet():
@@ -33,8 +33,9 @@ class PSPU_SkelNet():
         self.thresh = 0.5
         self.batch_size = batch_size
         self.ntimes = ntimes
-        self.load_train_data()
-        self.build_model()
+        self.model = None
+        self.input_pix = None
+        self.output_pix = None
 
 
     def load_train_data(self):
@@ -49,8 +50,12 @@ class PSPU_SkelNet():
 
 
     def build_model(self):
-        input_shape = self.input_pix.shape[1:]
-        output_shape = self.output_pix.shape[1:]
+        if self.input_pix is None:
+            input_shape = (256, 256, 1)
+            output_shape = (256, 256, 1)
+        else:
+            input_shape = self.input_pix.shape[1:]
+            output_shape = self.output_pix.shape[1:]
         self.model = build_model(input_shape, output_shape)
         self.model.summary()
         optimizer = Adam(lr=1e-3)
@@ -65,21 +70,25 @@ class PSPU_SkelNet():
 
 
     def load_weights(self, weights_file):
+        if self.model is None:
+            self.build_model()
         print("Loading model weights ...", weights_file)
         self.model.load_weights(weights_file)
 
 
     def lr_schedule(self, epoch):
         lr = 1e-3
-        if epoch > 60:
-            lr = 0.5e-5
-        elif epoch > 20:
+        if epoch > 120:
+            lr = 0.5e-4
+        elif epoch > 60:
             lr = 1e-4
         print('Learning rate: ', lr)
         return lr
 
 
     def train(self):
+        self.load_train_data()
+        self.build_model()
         # prepare model model saving directory.
         save_dir = os.path.join(os.getcwd(), 'weights')
         if not os.path.isdir(save_dir):
@@ -114,6 +123,10 @@ class PSPU_SkelNet():
 
 
     def predict(self):
+        self.build_model()
+        if not os.path.isdir(PRED_PATH):
+            os.makedirs(PRED_PATH)
+
         path = TEST_PATH
         files = list_files(path)
         pix = []
@@ -124,8 +137,8 @@ class PSPU_SkelNet():
             print(pix_file)
 
         pix = np.array(pix)
-        pix = np.expand_dims(pix, axis=3)
         pix = pix / 255.0
+        pix = np.expand_dims(pix, axis=3)
 
         for i in range(pix.shape[0]):
             img = pix[i]

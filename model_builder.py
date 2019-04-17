@@ -254,7 +254,7 @@ def build_model(input_shape,
                          padding='same',
                          name='tconv_o3')(d32)
 
-    y = concatenate([o1, o2, o3])
+    y = concatenate([o1, o2, o3], name="concat_os")
     y = Conv2DTranspose(32,
                         kernel_size=1,
                         strides=1,

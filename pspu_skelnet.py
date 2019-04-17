@@ -35,6 +35,7 @@ class PSPU_SkelNet():
         self.load_train_data()
         self.build_model()
 
+
     def load_train_data(self):
         infile = "npy/in_pts.npy"
         outfile = "npy/out_pts.npy"
@@ -43,14 +44,14 @@ class PSPU_SkelNet():
         print("Input train data shape: ", self.input_pix.shape)
         print("Loading output train data ... ", outfile) 
         self.output_pix = np.load(outfile)
-        print("Output train data shape: ", output_pix.shape)
+        print("Output train data shape: ", self.output_pix.shape)
 
 
-    def build_model(self)
+    def build_model(self):
         input_shape = self.input_pix.shape[1:]
         output_shape = self.output_pix.shape[1:]
         self.model = build_model(input_shape, output_shape)
-        self.summary()
+        self.model.summary()
         optimizer = Adam(lr=1e-3)
         self.model.compile(loss='binary_crossentropy',
                            optimizer=optimizer,
@@ -61,9 +62,11 @@ class PSPU_SkelNet():
         from keras.utils import plot_model
         plot_model(self.model, to_file='pspu_skelnet.png', show_shapes=True)
 
+
     def load_weights(self, weights_file):
         print("Loading generator weights ...", weights_file)
         self.model.load_weights(weights_file)
+
 
     def lr_schedule(self, epoch):
         lr = 1e-3
@@ -73,6 +76,7 @@ class PSPU_SkelNet():
             lr = 1e-4
         print('Learning rate: ', lr)
         return lr
+
 
     def train(self):
         # prepare model model saving directory.
@@ -91,7 +95,6 @@ class PSPU_SkelNet():
 
         # train the model with input images and labels
         xval = self.input_pix.astype('float32') / 255
-        xval = [xval, xval, xval, xval]
         yval = self.output_pix.astype('float32') / 255
 
         x, y = augment(self.input_pix, self.output_pix, ntimes=self.ntimes)
@@ -101,12 +104,11 @@ class PSPU_SkelNet():
         print("Augmented output train data shape: ", y.shape)
         x = x.astype('float32') / 255
         y = y.astype('float32') / 255
-        inputs = [x, x, x, x]
-        generator.fit(inputs,
+        generator.fit(x,
                       y,
                       epochs=EPOCHS,
                       validation_data=(xval, yval),
-                      batch_size=args.batch_size,
+                      batch_size=self.batch_size,
                       callbacks=callbacks)
 
 
@@ -172,7 +174,7 @@ if __name__ == '__main__':
         pspu_skelnet.plot_model()
 
     if args.weights is not None:
-        pspu_skelnet.load_weights, args.weights)
+        pspu_skelnet.load_weights(args.weights)
 
     if not args.train:
         pspu_skelnet.predict()

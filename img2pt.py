@@ -18,7 +18,7 @@ from skimage.io import imsave
 
 import matplotlib.pyplot as plt
 
-from utils import read_points, plot_3d_point_cloud, plot_2d_point_cloud
+from utils import read_points
 from utils import list_files, read_gray
 
 #53941

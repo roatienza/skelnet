@@ -22,6 +22,7 @@ from keras.layers import Input
 
 
 TEST_PATH = "dataset/point/test_img"
+PRED_PATH = "dataset/point/root"
 EPOCHS = 140
 
 
@@ -64,7 +65,7 @@ class PSPU_SkelNet():
 
 
     def load_weights(self, weights_file):
-        print("Loading generator weights ...", weights_file)
+        print("Loading model weights ...", weights_file)
         self.model.load_weights(weights_file)
 
 
@@ -119,23 +120,21 @@ class PSPU_SkelNet():
         for f in files:
             pix_file = os.path.join(path, f)
             pix_data =  read_gray(pix_file)
-            print(pix_file)
             pix.append(pix_data)
+            print(pix_file)
 
         pix = np.array(pix)
-        input_pix = np.expand_dims(pix, axis=3)
-        input_pix = input_pix / 255.0
+        pix = np.expand_dims(pix, axis=3)
+        pix = pix / 255.0
 
-        for i in range(input_pix.shape[0]):
-            pix = input_pix[i]
-            pix = np.expand_dims(pix, axis=0)
-            out_pix = generator.predict([pix, pix, pix, pix])
-            print("Max: ", np.amax(pix))
-            out_pix[out_pix>=thresh] = 1.0
-            out_pix[out_pix<thresh] = 0.0
+        for i in range(pix.shape[0]):
+            img = pix[i]
+            img = np.expand_dims(img, axis=0)
+            out_pix = self.model.predict(img)
+            out_pix[out_pix >= self.thresh] = 1.0
+            out_pix[out_pix < self.thresh] = 0.0
             out_pix = np.squeeze(out_pix) * 255.0
             out_pix = out_pix.astype(np.uint8)
-            print(out_pix.shape)
             path = os.path.join(PRED_PATH, files[i])
             print("Saving ... ", path)
             imsave(path, out_pix, cmap='gray')

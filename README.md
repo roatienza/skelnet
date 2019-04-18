@@ -1,7 +1,7 @@
 # PSPU-SkelNet
-This is the code implementation of the solution in the Point SkelNetOn CVPR 2019 Challenge.
+This is the code implementation of the solution in the Point SkelNetOn CVPR 2019 Challenge. TeamPH ranked 3rd with Chamfer Distance score of 2.9105.
 
-# Dataset
+## Dataset
 - The dataset is assumed to be at subdirectory `dataset/point`. So `mkdir dataset/point`.
 - Download compressed train dataset [here](https://drive.google.com/file/d/1XbhSn7mQ-ziuOUi-1rq3vIIF1FNgsaQH/view?usp=sharing). 
 - Copy in `skelnet` directory.
@@ -9,7 +9,7 @@ This is the code implementation of the solution in the Point SkelNetOn CVPR 2019
 - Download image version of final test images [here](https://drive.google.com/file/d/1Q6NMO1nqHNHl-jF-O8GJbFuN9QQ3c0_R/view?usp=sharing)
 - Copy in `dataset/point` and extract by running `tar zxvf weights.tar.gz`.
 
-# Make predictions using pre-trained weights
+## Make predictions using pre-trained weights
 - Download compressed weights [here](https://drive.google.com/file/d/1wF9UsTmjmxBb2El_CNpWoVn1R_zua2L0/view?usp=sharing)
 - Copy in `skelnet` directory.
 - Extract by running `tar zxvf weights.tar.gz` inside `skelnet` directory.
@@ -17,7 +17,7 @@ This is the code implementation of the solution in the Point SkelNetOn CVPR 2019
 - View predictions in folder `dataset/point/root`
 - To convert predicted images to point cloud run: `python3 img2pt.py`
 
-# Train the model
+## Train the model
 - Train the model from scratch: `python3 pspu_skelnet.py --train`
 - Alternatively, train the model from pre-trained weights: `python3 pspu_skelnet.py --train --weights=weights/pspu_skelnet.h5`
 

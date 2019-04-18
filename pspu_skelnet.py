@@ -40,10 +40,11 @@ class PSPU_SkelNet():
 
     def load_train_data(self):
         infile = "npy/in_pts.npy"
-        outfile = "npy/out_pts.npy"
         print("Loading input train data... ", infile) 
         self.input_pix = np.load(infile)
         print("Input train data shape: ", self.input_pix.shape)
+
+        outfile = "npy/out_pts.npy"
         print("Loading output train data ... ", outfile) 
         self.output_pix = np.load(outfile)
         print("Output train data shape: ", self.output_pix.shape)
@@ -66,6 +67,8 @@ class PSPU_SkelNet():
 
     def plot_model(self):
         from keras.utils import plot_model
+        if self.model is None:
+            self.build_model()
         plot_model(self.model, to_file='pspu_skelnet.png', show_shapes=True)
 
 
@@ -115,16 +118,16 @@ class PSPU_SkelNet():
         print("Augmented output train data shape: ", y.shape)
         x = x.astype('float32') / 255
         y = y.astype('float32') / 255
-        self.model.fit(x,
+        self.model.fit([x, x, x, x],
                        y,
                        epochs=EPOCHS,
-                       validation_data=(xval, yval),
+                       validation_data=([xval, xval, xval, xval], yval),
                        batch_size=self.batch_size,
                        callbacks=callbacks)
 
-
     def predict(self):
-        self.build_model()
+        if self.model is None:
+            self.build_model()
         if not os.path.isdir(PRED_PATH):
             os.makedirs(PRED_PATH)
 
@@ -135,16 +138,18 @@ class PSPU_SkelNet():
             pix_file = os.path.join(path, f)
             pix_data =  read_gray(pix_file)
             pix.append(pix_data)
-            print(pix_file)
+            # print(pix_file)
 
         pix = np.array(pix)
+        print("Test image max: ", np.amax(pix))
         pix = pix / 255.0
-        pix = np.expand_dims(pix, axis=3)
+        print("Normalized image max: ", np.amax(pix))
+        ipix = np.expand_dims(pix, axis=3)
 
-        for i in range(pix.shape[0]):
-            img = pix[i]
+        for i in range(ipix.shape[0]):
+            img = ipix[i]
             img = np.expand_dims(img, axis=0)
-            out_pix = self.model.predict(img)
+            out_pix = self.model.predict([img, img, img, img])
             out_pix[out_pix >= self.thresh] = 1.0
             out_pix[out_pix < self.thresh] = 0.0
             out_pix = np.squeeze(out_pix) * 255.0

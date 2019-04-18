@@ -78,8 +78,11 @@ def build_model(input_shape,
 
     channels = int(output_shape[-1])
 
-    inputs = Input(shape=input_shape)
-    e11 = encoder_layer(inputs,
+    inputs0 = Input(shape=input_shape)
+    inputs1 = Input(shape=input_shape)
+    inputs2 = Input(shape=input_shape)
+    inputs3 = Input(shape=input_shape)
+    e11 = encoder_layer(inputs1,
                         32,
                         strides=1,
                         kernel_size=kernel_size,
@@ -162,7 +165,7 @@ def build_model(input_shape,
     # 256x256 x channels
 
 
-    e21 = encoder_layer(inputs,
+    e21 = encoder_layer(inputs2,
                         32,
                         strides=1,
                         kernel_size=kernel_size,
@@ -215,7 +218,7 @@ def build_model(input_shape,
                          name='tconv_o2')(d23)
     # 256x256 x 1
 
-    e31 = encoder_layer(inputs,
+    e31 = encoder_layer(inputs3,
                         32,
                         strides=1,
                         kernel_size=kernel_size,
@@ -243,7 +246,7 @@ def build_model(input_shape,
     # 32x32 x 64+64 
     d32 = decoder_layer(d31,
                         e31,
-                        32,
+                        128,
                         strides=8,
                         kernel_size=kernel_size,
                         postfix='d32')
@@ -267,6 +270,7 @@ def build_model(input_shape,
                         padding='same',
                         name='tconv_out')(y)
     outputs = y
+    inputs = [inputs0, inputs1, inputs2, inputs3]
 
     model = Model(inputs, outputs, name=name)
 

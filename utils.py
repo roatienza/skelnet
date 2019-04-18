@@ -19,13 +19,13 @@ def translate(inputs, outputs, ntimes=8):
     print("Translating...")
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 
-def flip(inputs, outputs, ntimes=8):
+def flip(inputs, outputs, ntimes=1):
     args = dict(horizontal_flip=True)
     print("Flipping...")
-    return transform(inputs, outputs, ntimes=2, args=args)
+    return transform(inputs, outputs, ntimes=ntimes, args=args)
 
 def scale(inputs, outputs, ntimes=8):
-    args = dict(zoom_range=[0.6, 0.95])
+    args = dict(zoom_range=[0.6, 0.9])
     print("Scaling...")
     return transform(inputs, outputs, ntimes=ntimes, args=args)
 

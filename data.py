@@ -1,24 +1,18 @@
+'''Utility for loading and saving dataset into npy file
+
+'''
+
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# import tensorflow as tf
-# tf.enable_eager_execution()
-
 import numpy as np
 import argparse
-import sys
-
 import os
-import datetime
-import scipy.misc
-import json
 from skimage.io import imsave
 
-import matplotlib.pyplot as plt
-
-from utils import read_points, plot_3d_point_cloud, plot_2d_point_cloud
+from utils import read_points
 from utils import list_files, read_gray
 
 #53941
@@ -65,7 +59,7 @@ def get_in_pix(filename="in_pix.npy", ispix=True, isskel=False, istest=False):
                 x = min(round(p[0]), 255)
                 y = min(round(p[1]), 255)
                 image[x][y] = 255
-            impath = os.path.join("images", f + ".png")
+            impath = os.path.join("tmp", f + ".png")
             print("Saving ... ", impath)
             imsave(impath, image, cmap='gray')
             pix_data = image
@@ -114,11 +108,25 @@ def get_out_pix(filename="out_pix.npy"):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # help_ = "pix file"
-    # parser.add_argument("--pix_file", default='coords_apple-1-full.pts', help=help_)
+    help_ = "Generate train input dataset npy file"
+    parser.add_argument("--input",
+                        default=False,
+                        action='store_true',
+                        help=help_)
+    help_ = "Generate train output dataset npy file"
+    parser.add_argument("--output",
+                        default=False,
+                        action='store_true',
+                        help=help_)
     args = parser.parse_args()
+    if not os.path.isdir('npy'):
+        os.makedirs('npy')
+    if not os.path.isdir('tmp'):
+        os.makedirs('tmp')
 
-    pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=True, istest=False)
-    # pix = get_in_pix(filename="in_pts_test.npy", ispix=False, isskel=False, istest=True)
-    # pix = get_in_pix(filename="out_pts.npy", ispix=False, isskel=True, istest=False)
-    # pix = get_out_pix()
+    if args.output:
+        filename = os.path.join("npy", "out_pts.npy")
+        get_in_pix(filename=filename, ispix=False, isskel=True, istest=False)
+    if args.input:
+        filename = os.path.join("npy", "in_pts.npy")
+        get_in_pix(filename=filename, ispix=False, isskel=False, istest=False)

@@ -285,6 +285,3 @@ if __name__ == '__main__':
     model = build_model(input_shape, output_shape)
     model.summary()
     plot_model(model, to_file='model.png', show_shapes=True)
-
-
-

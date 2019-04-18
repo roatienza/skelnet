@@ -1,5 +1,15 @@
 """PSPU-SkelNet: build, train, test
 
+Pls cite:
+
+@inproceedings{atienza2019cvprwskelneton,
+    title={Pyramid U-Network for Skeleton Extraction from Shape Points},
+    author={Atienza, Rowel},
+    booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops},
+    pages={0--0},
+    year={2019}
+}
+
 """
 
 from __future__ import absolute_import
@@ -22,7 +32,7 @@ from keras.layers import Input
 
 
 TEST_PATH = "dataset/point/test_img"
-PRED_PATH = "dataset/point/root"
+ROOT_PATH = "dataset/point/root"
 EPOCHS = 200
 
 
@@ -128,8 +138,8 @@ class PSPU_SkelNet():
     def predict(self):
         if self.model is None:
             self.build_model()
-        if not os.path.isdir(PRED_PATH):
-            os.makedirs(PRED_PATH)
+        if not os.path.isdir(ROOT_PATH):
+            os.makedirs(ROOT_PATH)
 
         path = TEST_PATH
         files = list_files(path)
@@ -154,7 +164,7 @@ class PSPU_SkelNet():
             out_pix[out_pix < self.thresh] = 0.0
             out_pix = np.squeeze(out_pix) * 255.0
             out_pix = out_pix.astype(np.uint8)
-            path = os.path.join(PRED_PATH, files[i])
+            path = os.path.join(ROOT_PATH, files[i])
             print("Saving ... ", path)
             imsave(path, out_pix, cmap='gray')
 

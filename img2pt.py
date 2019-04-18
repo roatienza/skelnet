@@ -1,10 +1,10 @@
+'''Utility for converting from image to point cloud
+
+'''
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
-# import tensorflow as tf
-# tf.enable_eager_execution()
 
 import numpy as np
 import argparse
@@ -21,17 +21,13 @@ import matplotlib.pyplot as plt
 from utils import read_points
 from utils import list_files, read_gray
 
-#53941
-#12270
-#dataset/point/full/coords_rat-09-full.pts
-#dataset/point/skel/coords_pocket-2-skel.pts
-
-PT_PATH = "dataset/point/test"
 ROOT_PATH = "dataset/point/root"
-PR_PATH = "dataset/point/pred"
+PRED_PATH = "dataset/point/pred"
 
 def img2pt():
     path = ROOT_PATH
+    if not os.path.isdir(PRED_PATH):
+        os.makedirs(PRED_PATH)
     files = list_files(path)
     pix = []
     for f in files:
@@ -52,8 +48,5 @@ def img2pt():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # help_ = "pix file"
-    # parser.add_argument("--pix_file", default='coords_apple-1-full.pts', help=help_)
     args = parser.parse_args()
     img2pt()
-

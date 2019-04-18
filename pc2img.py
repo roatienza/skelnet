@@ -1,3 +1,7 @@
+'''Utility for converting point cloud to image
+
+'''
+
 
 from __future__ import absolute_import
 from __future__ import division
@@ -18,7 +22,7 @@ from skimage.io import imsave
 
 import matplotlib.pyplot as plt
 
-from utils import read_points, plot_3d_point_cloud, plot_2d_point_cloud
+from utils import read_points
 from utils import list_files, read_gray
 
 #53941

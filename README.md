@@ -29,3 +29,16 @@ The network is a pyramid of 3 U-Networks. U-Network is commonly used in image tr
 
 ## Sample skeleton detection on test split
 ![Sample Prediction](images/test_imgs.png)
+
+## Citation
+If you find this work useful, please cite:
+
+```
+@inproceedings{atienza2019cvprwskelneton,
+  title={Pyramid U-Network for Skeleton Extraction from Shape Points},
+  author={Atienza, Rowel},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops},
+  pages={0--0},
+  year={2019}
+}
+```
